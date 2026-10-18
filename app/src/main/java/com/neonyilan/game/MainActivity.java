@@ -233,11 +233,11 @@ public class MainActivity extends AppCompatActivity {
             try {
                 Intent sendIntent = new Intent();
                 sendIntent.setAction(Intent.ACTION_SEND);
-                sendIntent.putExtra(Intent.EXTRA_SUBJECT, "Worm Arena - Yılan Savaşı Daveti");
-                sendIntent.putExtra(Intent.EXTRA_TEXT, "🎮 Worm Arena odama davetlisin!\nOda Kodu: " + roomCode + "\nTek tıkla savaşa katıl 👇\n" + url);
+                sendIntent.putExtra(Intent.EXTRA_SUBJECT, "Worm Arena - Room Invite");
+                sendIntent.putExtra(Intent.EXTRA_TEXT, "🎮 You're invited to my Worm Arena room!\nRoom Code: " + roomCode + "\nJoin the battle with one click 👇\n" + url);
                 sendIntent.setType("text/plain");
 
-                Intent shareIntent = Intent.createChooser(sendIntent, "Odayı Arkadaşlarınla Paylaş");
+                Intent shareIntent = Intent.createChooser(sendIntent, "Share Room With Friends");
                 shareIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 mContext.startActivity(shareIntent);
             } catch (Exception e) {

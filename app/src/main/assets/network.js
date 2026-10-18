@@ -52,8 +52,8 @@ class NetworkManager {
     return Math.floor(1000 + Math.random() * 9000).toString();
   }
 
-  // STUN Sunucu Listesi (Google & Cloudflare Yüksek Hızlı ve Küresel STUN Sunucuları)
-  // Yanıt süresi 15-30ms; bozuk/kara delik TURN sunucuları kaldırılarak 20 saniyelik takılma önlenir.
+  // STUN & TURN Sunucu Listesi (Google, Cloudflare ve Küresel TURN Aktarıcıları)
+  // NAT / Mobil 4G/5G / CGNAT arkasındaki tüm tarayıcıların birbiriyle kesin bağlantı kurmasını sağlar.
   getIceServers() {
     return [
       {
@@ -65,6 +65,23 @@ class NetworkManager {
           'stun:stun4.l.google.com:19302',
           'stun:stun.cloudflare.com:3478'
         ]
+      },
+      {
+        urls: [
+          'turn:eu-0.turn.peerjs.com:3478',
+          'turn:us-0.turn.peerjs.com:3478'
+        ],
+        username: 'peerjs',
+        credential: 'peerjsp'
+      },
+      {
+        urls: [
+          'turn:openrelay.metered.ca:80',
+          'turn:openrelay.metered.ca:443',
+          'turn:openrelay.metered.ca:443?transport=tcp'
+        ],
+        username: 'openrelay',
+        credential: 'openrelay'
       }
     ];
   }
@@ -81,7 +98,9 @@ class NetworkManager {
 
       if (typeof Peer === 'undefined') {
         if (window.showInGameAlert) {
-          window.showInGameAlert('Çok oyunculu ağ kütüphanesi yüklenemedi. İnternet bağlantınızı kontrol edin.', 'warning', '⚠️ BAĞLANTI HATASI');
+          const msg = window.I18N ? window.I18N.t('alert_conn_error_msg') : 'Multiplayer network library could not be loaded. Please check your internet connection.';
+          const title = window.I18N ? window.I18N.t('alert_conn_error_title') : '⚠️ CONNECTION ERROR';
+          window.showInGameAlert(msg, 'warning', title);
         }
         reject(new Error('PeerJS not loaded'));
         return;
@@ -379,18 +398,45 @@ class NetworkManager {
         worm.ghostTimer = 180;
         this.remotePlayers.set(peerId, worm);
 
-        const conn = this.connections.get(peerId);
-        if (this.isConnReady(conn)) {
-          conn.send({
-            type: 'GAME_START',
-            roomCode: this.roomCode,
-            worldWidth: this.game.worldWidth,
-            worldHeight: this.game.worldHeight,
-            foodSeed: Number(this.roomCode) || 12345,
-            spawns: { [peerId]: { x: rx, y: ry, angle: faceAngle } },
-            players: this.getLobbyList()
-          });
+        // Yeni katılan oyuncuya hem kendi noktasını hem de tüm canlı oyuncuların anlık konumunu gönder
+        const activeSpawns = { [peerId]: { x: rx, y: ry, angle: faceAngle } };
+        if (this.game.player) {
+          activeSpawns['host'] = {
+            x: Math.round(this.game.player.x),
+            y: Math.round(this.game.player.y),
+            angle: Number(this.game.player.angle.toFixed(2))
+          };
         }
+        this.remotePlayers.forEach((rw, rId) => {
+          activeSpawns[rId] = {
+            x: Math.round(rw.x),
+            y: Math.round(rw.y),
+            angle: Number(rw.angle.toFixed(2))
+          };
+        });
+
+        const sendGameStart = () => {
+          const conn = this.connections.get(peerId);
+          if (this.isConnReady(conn)) {
+            try {
+              conn.send({
+                type: 'GAME_START',
+                roomCode: this.roomCode,
+                worldWidth: this.game.worldWidth,
+                worldHeight: this.game.worldHeight,
+                foodSeed: Number(this.roomCode) || 12345,
+                spawns: activeSpawns,
+                players: this.getLobbyList()
+              });
+            } catch (e) {
+              console.warn('Geç katılım GAME_START gönderme hatası:', e);
+            }
+          }
+        };
+
+        sendGameStart();
+        setTimeout(sendGameStart, 150);
+        setTimeout(sendGameStart, 400);
       } else {
         this.broadcastLobbyState();
       }
@@ -486,9 +532,9 @@ class NetworkManager {
     // Host dünyasında tohum tabanlı yiyecekleri tazele (Ağdan 80KB veri aktarmak yerine tohum kodu kullanılır)
     const foodSeed = Number(this.roomCode) || Math.floor(Math.random() * 90000) + 10000;
     if (this.game.initFoodsWithSeed) {
-      this.game.initFoodsWithSeed(foodSeed, 800);
+      this.game.initFoodsWithSeed(foodSeed, 2000);
     } else {
-      this.game.initFoods(800);
+      this.game.initFoods(2000);
     }
 
     // Tüm oyuncular için merkez etrafında güvenli, geniş ve dairesel başlangıç noktaları oluştur
@@ -570,7 +616,9 @@ class NetworkManager {
 
       if (typeof Peer === 'undefined') {
         if (window.showInGameAlert) {
-          window.showInGameAlert('Çok oyunculu ağ kütüphanesi yüklenemedi. İnternet bağlantınızı kontrol edin.', 'warning', '⚠️ BAĞLANTI HATASI');
+          const msg = window.I18N ? window.I18N.t('alert_conn_error_msg') : 'Multiplayer network library could not be loaded. Please check your internet connection.';
+          const title = window.I18N ? window.I18N.t('alert_conn_error_title') : '⚠️ CONNECTION ERROR';
+          window.showInGameAlert(msg, 'warning', title);
         }
         reject(new Error('PeerJS not loaded'));
         return;
@@ -578,8 +626,8 @@ class NetworkManager {
 
       if (this.onJoinStatus) {
         this.onJoinStatus(attempt === 1
-          ? 'Oda sahibine bağlanılıyor...'
-          : `Oda sahibine ulaşılmaya çalışılıyor (${attempt}/${MAX_ATTEMPTS})...`);
+          ? (window.I18N ? window.I18N.t('net_connecting') : 'Connecting to host...')
+          : (window.I18N ? window.I18N.t('net_trying_reach', { attempt, max: MAX_ATTEMPTS }) : `Trying to reach host (${attempt}/${MAX_ATTEMPTS})...`));
       }
 
       // Başarısız denemede: hak varsa yeniden dene, yoksa hata ver
@@ -591,7 +639,7 @@ class NetworkManager {
 
         if (attempt < MAX_ATTEMPTS) {
           if (this.onJoinStatus) {
-            this.onJoinStatus(`Oda sahibinin oyuna dönmesi bekleniyor (${attempt}/${MAX_ATTEMPTS})... Lütfen bekleyin`);
+            this.onJoinStatus(window.I18N ? window.I18N.t('net_waiting_return', { attempt, max: MAX_ATTEMPTS }) : `Waiting for host to return (${attempt}/${MAX_ATTEMPTS})... Please wait`);
           }
           setTimeout(() => {
             if (isStale()) return;
@@ -620,9 +668,9 @@ class NetworkManager {
       const connTimeout = setTimeout(() => {
         if (!this.hostConn || !this.hostConn.open) {
           failAttempt(
-            new Error('Bağlantı zaman aşımı'),
-            'Oda sahibine ulaşılamadı. Oda sahibinin telefonunda oyunun açık ve odanın kurulu olduğundan emin olup "Tekrar Bağlan" butonuna basın.',
-            '⚠️ BAĞLANTI ZAMAN AŞIMI'
+            new Error('Connection timeout'),
+            window.I18N ? window.I18N.t('net_timeout_msg') : 'Could not reach host. Please verify the host has the game open and room active, then click "Reconnect".',
+            window.I18N ? window.I18N.t('net_timeout_title') : '⚠️ CONNECTION TIMEOUT'
           );
         }
       }, ATTEMPT_TIMEOUT_MS);
@@ -646,7 +694,8 @@ class NetworkManager {
           console.log('Odaya başarıyla bağlandı!');
 
           // Host'a profil ve kostüm bilgilerini gönder
-          const playerName = (this.game && this.game.getPlayerName) ? this.game.getPlayerName() : 'Oyuncu';
+          const defaultPlayerName = window.I18N ? window.I18N.t('player_default') : 'Player';
+          const playerName = (this.game && this.game.getPlayerName) ? this.game.getPlayerName() : defaultPlayerName;
           const skinId = (this.game && this.game.getSelectedSkinId) ? this.game.getSelectedSkinId() : 'white_king';
           const hatId = (this.game && this.game.equippedHat) ? this.game.equippedHat : 'none';
 
@@ -685,7 +734,11 @@ class NetworkManager {
           if (isStale() || this.hostConn !== conn) return;
           console.warn('Oda sahibi ile bağlantı kesildi');
           if (window.showInGameAlert) {
-            window.showInGameAlert('Oda bağlantısı kesildi. Menüye dönülüyor...', 'warning', '⚠️ BAĞLANTI KOPTU');
+            window.showInGameAlert(
+              window.I18N ? window.I18N.t('net_lost_msg') : 'Room connection lost. Returning to menu...',
+              'warning',
+              window.I18N ? window.I18N.t('net_lost_title') : '⚠️ CONNECTION LOST'
+            );
           }
           // Hemen oyundan atmak yerine 3 sn bekle
           setTimeout(() => {
@@ -696,17 +749,21 @@ class NetworkManager {
         });
 
         conn.on('error', (err) => {
-          failAttempt(err, 'Oda sahibine bağlanırken hata oluştu. Lütfen tekrar deneyin.', '⚠️ BAĞLANTI HATASI');
+          failAttempt(
+            err,
+            window.I18N ? window.I18N.t('net_conn_err_retry') : 'Error occurred while connecting to room host. Please try again.',
+            window.I18N ? window.I18N.t('alert_conn_error_title') : '⚠️ CONNECTION ERROR'
+          );
         });
       });
 
       this.peer.on('error', (err) => {
         console.error('Odaya bağlanılamadı:', err);
-        let msg = 'Odaya bağlanılamadı. İnternet bağlantınızı kontrol edin.';
-        let title = '⚠️ BAĞLANTI HATASI';
+        let msg = window.I18N ? window.I18N.t('net_conn_failed_msg') : 'Could not connect to room. Please check your internet connection.';
+        let title = window.I18N ? window.I18N.t('alert_conn_error_title') : '⚠️ CONNECTION ERROR';
         if (err && err.type === 'peer-unavailable') {
-          msg = `"${this.roomCode}" kodlu oda sahibi henüz hazır değil. Oda sahibinin telefonunda oyunun açık olduğundan emin olun.`;
-          title = '⚠️ ODA SAHİBİ BEKLENİYOR';
+          msg = window.I18N ? window.I18N.t('net_peer_unavailable_msg', { code: this.roomCode }) : `Room host for "${this.roomCode}" is not ready yet. Please ensure the host has the game and room open.`;
+          title = window.I18N ? window.I18N.t('net_waiting_host_title') : '⚠️ WAITING FOR HOST';
         }
         failAttempt(err, msg, title);
       });
@@ -753,14 +810,14 @@ class NetworkManager {
 
       // Tohum tabanlı yiyecekleri başlat
       if (data.foodSeed && this.game.initFoodsWithSeed) {
-        this.game.initFoodsWithSeed(data.foodSeed, 800);
+        this.game.initFoodsWithSeed(data.foodSeed, 2000);
       } else if (data.foods) {
         this.game.foods = data.foods.map(f => {
           const foodDef = (typeof FOOD_TYPES !== 'undefined' && FOOD_TYPES.find(ft => ft.type === f.type)) || FOOD_TYPES[0];
           return { x: f.x, y: f.y, ...foodDef, pulse: Math.random() * Math.PI * 2 };
         });
       } else {
-        this.game.initFoods(800);
+        this.game.initFoods(2000);
       }
 
       // Kendi başlangıç noktamı bul (akıllı eşleme garantisi)
@@ -882,7 +939,33 @@ class NetworkManager {
             worm.y += rdy * 0.35;
           }
           if (wData.body && wData.body.length > 0) {
-            worm.body = wData.body;
+            // Seyreltilmiş (downsampled) ağ gövde noktalarını pürüzsüz ve kesintisiz yılan gövdesine dönüştür
+            const rawPts = wData.body;
+            if (rawPts.length === 1) {
+              worm.body = [{ x: rawPts[0].x, y: rawPts[0].y }];
+            } else {
+              const dense = [{ x: rawPts[0].x, y: rawPts[0].y }];
+              const targetSpacing = worm.spacing || 6.0;
+              for (let k = 1; k < rawPts.length; k++) {
+                const prev = dense[dense.length - 1];
+                const curr = rawPts[k];
+                const dx = curr.x - prev.x;
+                const dy = curr.y - prev.y;
+                const dist = Math.hypot(dx, dy);
+                if (dist > targetSpacing * 1.35) {
+                  const steps = Math.floor(dist / targetSpacing);
+                  for (let s = 1; s <= steps; s++) {
+                    const t = s / (steps + 1);
+                    dense.push({
+                      x: Math.round(prev.x + dx * t),
+                      y: Math.round(prev.y + dy * t)
+                    });
+                  }
+                }
+                dense.push({ x: curr.x, y: curr.y });
+              }
+              worm.body = dense;
+            }
           }
           worm.radius = wData.radius;
           worm.score = wData.score;
@@ -903,10 +986,15 @@ class NetworkManager {
         }
       });
 
-      // Artık var olmayan solucanları temizle
-      for (const [pId] of this.remotePlayers.entries()) {
+      // Artık var olmayan solucanları temizle (Tek karelik paket gecikmesinde yılanın kaybolmaması için 45 karelik tolerans)
+      for (const [pId, rw] of this.remotePlayers.entries()) {
         if (!activeIds.has(pId)) {
-          this.remotePlayers.delete(pId);
+          rw._missingTicks = (rw._missingTicks || 0) + 1;
+          if (rw._missingTicks > 45) {
+            this.remotePlayers.delete(pId);
+          }
+        } else {
+          rw._missingTicks = 0;
         }
       }
 
@@ -980,8 +1068,8 @@ class NetworkManager {
 
     this.connections.forEach(conn => {
       if (this.isConnReady(conn)) {
-        // RTCDataChannel Buffer Taşması Kontrolü (Buffer > 32KB ise bu kareyi atla, kanalı çökertme!)
-        if (conn.dataChannel && conn.dataChannel.bufferedAmount > 32768) {
+        // RTCDataChannel Buffer Taşması Kontrolü (Buffer > 64KB ise bu kareyi atla, kanalı çökertme!)
+        if (conn.dataChannel && conn.dataChannel.bufferedAmount > 65536) {
           return;
         }
         try {

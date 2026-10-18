@@ -1,7 +1,7 @@
 {
-  "name": "Worm Arena - Solucan & Yılan Savaşı",
+  "name": "Worm Arena - Snake & Worm Battle",
   "short_name": "Worm Arena",
-  "description": "Mobil cihazlar için özel olarak tasarlanmış modern solucan ve yılan arenası savaşı.",
+  "description": "Modern multiplayer snake and worm arena battle specially designed for mobile devices.",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0a0c16",

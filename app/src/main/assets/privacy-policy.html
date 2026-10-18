@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy - Worm Arena</title>
+  <style>
+    :root {
+      --bg-color: #0f0a1c;
+      --card-bg: #1a1330;
+      --accent: #8b5cf6;
+      --text: #e2e8f0;
+      --text-muted: #94a3b8;
+      --border: rgba(139, 92, 246, 0.2);
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg-color);
+      color: var(--text);
+      line-height: 1.65;
+      padding: 40px 20px;
+    }
+    .container {
+      max-width: 820px;
+      margin: 0 auto;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 40px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .header h1 {
+      font-size: 2rem;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+    .header p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+    .badge {
+      display: inline-block;
+      background: rgba(139, 92, 246, 0.15);
+      color: #c4b5fd;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+    h2 {
+      font-size: 1.25rem;
+      color: #f1f5f9;
+      margin: 28px 0 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    p, li {
+      color: var(--text-muted);
+      margin-bottom: 12px;
+      font-size: 0.98rem;
+    }
+    ul {
+      margin-left: 24px;
+      margin-bottom: 16px;
+    }
+    li {
+      margin-bottom: 6px;
+    }
+    .lang-toggle {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .lang-btn {
+      background: #271c47;
+      color: #fff;
+      border: 1px solid var(--border);
+      padding: 8px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .lang-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+    .contact-box {
+      background: rgba(139, 92, 246, 0.08);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px 20px;
+      margin-top: 24px;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 30px;
+      color: #64748b;
+      font-size: 0.85rem;
+    }
+    a {
+      color: #a78bfa;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="header">
+      <span class="badge">Worm Arena</span>
+      <h1>Privacy Policy / Gizlilik Politikası</h1>
+      <p>Last Updated / Son Güncelleme: October 18, 2026</p>
+    </div>
+
+    <div class="lang-toggle">
+      <button class="lang-btn active" id="btnEn" onclick="switchLang('en')">English</button>
+      <button class="lang-btn" id="btnTr" onclick="switchLang('tr')">Türkçe</button>
+    </div>
+
+    <!-- ENGLISH SECTION -->
+    <div id="contentEn">
+      <h2>1. Introduction</h2>
+      <p>Welcome to <strong>Worm Arena</strong> ("the Game", "we", "us", or "our"), developed by <strong>Doğu Yazılım</strong>. We respect your privacy and are committed to protecting any information associated with your use of our application.</p>
+      <p>This Privacy Policy explains how information is handled when you download, install, and play Worm Arena on mobile devices or through web browsers.</p>
+
+      <h2>2. Information We Do NOT Collect</h2>
+      <p>Worm Arena is designed to provide fun and safe gameplay without intruding on your privacy:</p>
+      <ul>
+        <li>We <strong>do not</strong> require user registration, email, or account creation.</li>
+        <li>We <strong>do not</strong> collect or track personal information such as your real name, address, phone number, contacts, photos, or biometric data.</li>
+        <li>We <strong>do not</strong> collect real-time precise GPS location data.</li>
+        <li>We <strong>do not</strong> collect or process credit card or banking details.</li>
+      </ul>
+
+      <h2>3. Information Stored Locally on Your Device</h2>
+      <p>To provide a smooth gaming experience, certain non-personal game progress data is stored directly and exclusively on your local device storage (HTML5 LocalStorage):</p>
+      <ul>
+        <li>Your self-selected in-game nickname/player name.</li>
+        <li>In-game progression (earned coins, XP, levels, unlocked skins, hats).</li>
+        <li>Personal preferences (sound effects, background music, haptic vibration, control mode, language).</li>
+      </ul>
+      <p>This data stays on your device and is not uploaded to our servers or sold to any third party.</p>
+
+      <h2>4. Multiplayer & Network Communication</h2>
+      <p>Worm Arena features an optional "Play with Friends" multiplayer mode utilizing Peer-to-Peer (WebRTC) technology:</p>
+      <ul>
+        <li>When you host or join a multiplayer room, ephemeral game coordinate data (snake positions, food positions, score) and your chosen nickname are shared directly between participating players.</li>
+        <li>This data is solely used to synchronize the gameplay in real time and is discarded once the room session terminates. No chat logs or sensitive communication are stored.</li>
+      </ul>
+
+      <h2>5. Device Permissions</h2>
+      <p>The application may request the following permissions:</p>
+      <ul>
+        <li><strong>INTERNET & ACCESS_NETWORK_STATE:</strong> Required to establish multiplayer room connections with friends and load web-based assets.</li>
+        <li><strong>VIBRATE:</strong> Used solely to provide optional haptic feedback when eating food or upon game collision. You can toggle this on or off in the game settings at any time.</li>
+      </ul>
+
+      <h2>6. Children's Privacy (COPPA & Families Policy)</h2>
+      <p>Worm Arena is designed for all audiences and complies with the Google Play Families Policy and the Children's Online Privacy Protection Act (COPPA). We do not knowingly collect personal identifiable information from children under the age of 13. If you believe any personal data was inadvertently transmitted, please contact us immediately so we can promptly address it.</p>
+
+      <h2>7. Security</h2>
+      <p>We value your trust. Because we do not store sensitive personal information on external servers, the risk of data compromise is minimal. Local data stored on your device is protected by your operating system's standard application sandboxing.</p>
+
+      <h2>8. Changes to This Privacy Policy</h2>
+      <p>We may update this Privacy Policy from time to time. Any changes will be posted on this page with an updated "Last Updated" date. We encourage you to review this page periodically.</p>
+
+      <h2>9. Contact Us</h2>
+      <p>If you have any questions or feedback regarding this Privacy Policy or our practices, please reach out to us:</p>
+      <div class="contact-box">
+        <strong>Developer:</strong> Doğu Yazılım<br>
+        <strong>Email:</strong> <a href="mailto:doguyazilim@gmail.com">doguyazilim@gmail.com</a><br>
+        <strong>Application:</strong> Worm Arena
+      </div>
+    </div>
+
+    <!-- TURKISH SECTION -->
+    <div id="contentTr" style="display: none;">
+      <h2>1. Giriş</h2>
+      <p><strong>Doğu Yazılım</strong> tarafından geliştirilen <strong>Worm Arena</strong> ("Oyun", "biz", "bizim") oyununa hoş geldiniz. Gizliliğinize büyük önem veriyor ve oyunumuzu kullanırken verilerinizin güvenliğini taahhüt ediyoruz.</p>
+      <p>Bu Gizlilik Politikası, mobil cihazınızda veya web tarayıcınızda Worm Arena'yı oynarken verilerin nasıl işlendiğini açıklar.</p>
+
+      <h2>2. Toplamadığımız Bilgiler</h2>
+      <p>Worm Arena, oyuncuların kişisel gizliliğine saygı duyacak şekilde geliştirilmiştir:</p>
+      <ul>
+        <li>Kullanıcı kaydı, e-posta veya hesap oluşturma zorunluluğu <strong>yoktur</strong>.</li>
+        <li>Gerçek adınız, telefon numaranız, adresiniz, rehberiniz, fotoğraflarınız gibi kişisel veriler <strong>kesinlikle toplanmaz veya takip edilmez</strong>.</li>
+        <li>Kesin GPS konum bilginiz <strong>alınmaz</strong>.</li>
+        <li>Kredi kartı veya ödeme bilgileriniz <strong>işlenmez veya saklanmaz</strong>.</li>
+      </ul>
+
+      <h2>3. Cihazınızda Yerel Olarak Saklanan Bilgiler</h2>
+      <p>Kullanıcı deneyimini kesintisiz kılmak için yalnızca oyun ilerlemenize ait temel veriler cihazınızın kendi yerel belleğinde (HTML5 LocalStorage) saklanır:</p>
+      <ul>
+        <li>Belirlediğiniz oyun içi oyuncu adı (rumuz).</li>
+        <li>Oyun içi ilerleme (kazanılan altınlar, seviye, açılan kostümler ve şapkalar).</li>
+        <li>Ayarlar (ses efektleri, müzik, titreşim, kontrol modu, seçilen dil).</li>
+      </ul>
+      <p>Bu veriler sadece telefonunuzda kalır; sunucularımıza yüklenmez ve üçüncü şahıslara satılmaz.</p>
+
+      <h2>4. Çok Oyunculu (Multiplayer) İletişim</h2>
+      <p>Worm Arena, isteğe bağlı olarak arkadaşlarla oda kurup oynamayı sağlayan Peer-to-Peer (WebRTC) teknolojisini kullanır:</p>
+      <ul>
+        <li>Bir odaya katıldığınızda veya oda kurduğunuzda, yalnızca oyun senkronizasyonunu sağlamak için anlık solucan koordinatları ve oyuncu adınız oda içerisindeki diğer oyuncularla paylaşılır.</li>
+        <li>Bu veriler oyun sona erdiğinde anında silinir, sunucularda hiçbir sohbet veya kayıt tutulmaz.</li>
+      </ul>
+
+      <h2>5. Cihaz İzinleri</h2>
+      <p>Uygulama yalnızca şu izinleri kullanabilir:</p>
+      <ul>
+        <li><strong>İNTERNET & AĞ DURUMU (INTERNET / ACCESS_NETWORK_STATE):</strong> Çok oyunculu arkadaş odalarına bağlanabilmek ve oyun içi kaynakları yüklemek için gereklidir.</li>
+        <li><strong>TİTREŞİM (VIBRATE):</strong> Yem yerken veya çarpışmalarda haptik geri bildirim vermek için kullanılır. Oyun içi ayarlardan dilediğiniz zaman kapatabilirsiniz.</li>
+      </ul>
+
+      <h2>6. Çocukların Gizliliği (COPPA ve Aile Politikası)</h2>
+      <p>Worm Arena her yaştan kitleye ve ailelere uygundur; Google Play Aile Politikaları ve COPPA kurallarına tam uyumludur. 13 yaşın altındaki çocuklardan bilerek hiçbir kişisel bilgi talep edilmez ve toplanmaz.</p>
+
+      <h2>7. İletişim</h2>
+      <p>Bu Gizlilik Politikası hakkında herhangi bir sorunuz veya öneriniz varsa bizimle iletişime geçebilirsiniz:</p>
+      <div class="contact-box">
+        <strong>Geliştirici:</strong> Doğu Yazılım<br>
+        <strong>E-posta:</strong> <a href="mailto:doguyazilim@gmail.com">doguyazilim@gmail.com</a><br>
+        <strong>Uygulama:</strong> Worm Arena
+      </div>
+    </div>
+
+    <div class="footer">
+      &copy; 2026 Doğu Yazılım. All Rights Reserved.
+    </div>
+  </div>
+
+  <script>
+    function switchLang(lang) {
+      const en = document.getElementById('contentEn');
+      const tr = document.getElementById('contentTr');
+      const btnEn = document.getElementById('btnEn');
+      const btnTr = document.getElementById('btnTr');
+
+      if (lang === 'tr') {
+        en.style.display = 'none';
+        tr.style.display = 'block';
+        btnEn.classList.remove('active');
+        btnTr.classList.add('active');
+      } else {
+        en.style.display = 'block';
+        tr.style.display = 'none';
+        btnEn.classList.add('active');
+        btnTr.classList.remove('active');
+      }
+    }
+  </script>
+</body>
+</html>

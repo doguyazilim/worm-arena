@@ -6,57 +6,81 @@
 
 // Kostüm Tanımları (Her biri farklı seviyede açılır ve kendine özgü şekil/anatomiye sahiptir)
 const SKINS = [
-  { id: 'white_king', name: 'Kutsal Ak Ejder', unlockLevel: 1, shape: 'dragon', head: '#ffffff', body1: '#f8fafc', body2: '#00f0ff', glow: '#00f0ff', outline: '#090d1a', spine: '#ffd700', belly: '#dbeafe', cost: 0 },
-  { id: 'candy_pink', name: 'Kristal Şeker Kobrası', unlockLevel: 2, shape: 'cobra', head: '#ff66b2', body1: '#ff1493', body2: '#ff85c0', glow: '#ff007f', outline: '#3d0020', spine: '#ffffff', belly: '#ffe4ef', cost: 100 },
-  { id: 'neon_cyber', name: 'Siber Mecha Titan', unlockLevel: 4, shape: 'mecha', head: '#00ffff', body1: '#0284c7', body2: '#00e5ff', glow: '#00f0ff', outline: '#001e28', spine: '#00ffcc', belly: '#0f172a', cost: 200 },
-  { id: 'golden_dragon', name: 'İmparatorluk Altın Ejderi', unlockLevel: 6, shape: 'golden_serpent', head: '#ffe066', body1: '#ffb700', body2: '#ff8800', glow: '#ffb700', outline: '#3b2000', spine: '#ff3300', belly: '#fff3c4', cost: 300 },
-  { id: 'fire_tiger', name: 'Magma Ateş Yılanı', unlockLevel: 8, shape: 'magma', head: '#ff4500', body1: '#b91c1c', body2: '#ea580c', glow: '#ff3300', outline: '#2b0600', spine: '#ffff00', belly: '#ffccaa', cost: 400 },
-  { id: 'shadow_ninja', name: 'Gölge Suikastçı', unlockLevel: 11, shape: 'ninja', head: '#334155', body1: '#0f172a', body2: '#1e1b4b', glow: '#ef4444', outline: '#020617', spine: '#ef4444', belly: '#1e293b', cost: 550 },
-  { id: 'samurai_warlord', name: 'Kadim Samuray Şogunu', unlockLevel: 15, shape: 'samurai', head: '#b91c1c', body1: '#7f1d1d', body2: '#d97706', glow: '#f59e0b', outline: '#450a0a', spine: '#fbbf24', belly: '#fef3c7', cost: 700 },
-  { id: 'dark_galaxy', name: 'Kozmik Hiçlik Ejderi', unlockLevel: 19, shape: 'cosmic', head: '#c084fc', body1: '#7e22ce', body2: '#3b0764', glow: '#a855f7', outline: '#17032c', spine: '#00f0ff', belly: '#581c87', cost: 850 },
-  { id: 'frozen_frost', name: 'Buzul Kırağı Ejderi', unlockLevel: 24, shape: 'frost', head: '#38bdf8', body1: '#0284c7', body2: '#bae6fd', glow: '#00f0ff', outline: '#082f49', spine: '#e0f2fe', belly: '#f0f9ff', cost: 1000 }
+  { id: 'white_king', get name() { return window.I18N ? window.I18N.getSkinName('white_king') : 'Holy White Dragon'; }, unlockLevel: 1, shape: 'dragon', head: '#ffffff', body1: '#f8fafc', body2: '#00f0ff', glow: '#00f0ff', outline: '#090d1a', spine: '#ffd700', belly: '#dbeafe', cost: 0 },
+  { id: 'candy_pink', get name() { return window.I18N ? window.I18N.getSkinName('candy_pink') : 'Crystal Candy Cobra'; }, unlockLevel: 2, shape: 'cobra', head: '#ff66b2', body1: '#ff1493', body2: '#ff85c0', glow: '#ff007f', outline: '#3d0020', spine: '#ffffff', belly: '#ffe4ef', cost: 100 },
+  { id: 'neon_cyber', get name() { return window.I18N ? window.I18N.getSkinName('neon_cyber') : 'Cyber Mecha Titan'; }, unlockLevel: 4, shape: 'mecha', head: '#00ffff', body1: '#0284c7', body2: '#00e5ff', glow: '#00f0ff', outline: '#001e28', spine: '#00ffcc', belly: '#0f172a', cost: 200 },
+  { id: 'golden_dragon', get name() { return window.I18N ? window.I18N.getSkinName('golden_dragon') : 'Imperial Gold Dragon'; }, unlockLevel: 6, shape: 'golden_serpent', head: '#ffe066', body1: '#ffb700', body2: '#ff8800', glow: '#ffb700', outline: '#3b2000', spine: '#ff3300', belly: '#fff3c4', cost: 300 },
+  { id: 'fire_tiger', get name() { return window.I18N ? window.I18N.getSkinName('fire_tiger') : 'Magma Fire Serpent'; }, unlockLevel: 8, shape: 'magma', head: '#ff4500', body1: '#b91c1c', body2: '#ea580c', glow: '#ff3300', outline: '#2b0600', spine: '#ffff00', belly: '#ffccaa', cost: 400 },
+  { id: 'shadow_ninja', get name() { return window.I18N ? window.I18N.getSkinName('shadow_ninja') : 'Shadow Assassin'; }, unlockLevel: 11, shape: 'ninja', head: '#334155', body1: '#0f172a', body2: '#1e1b4b', glow: '#ef4444', outline: '#020617', spine: '#ef4444', belly: '#1e293b', cost: 550 },
+  { id: 'samurai_warlord', get name() { return window.I18N ? window.I18N.getSkinName('samurai_warlord') : 'Ancient Samurai Shogun'; }, unlockLevel: 15, shape: 'samurai', head: '#b91c1c', body1: '#7f1d1d', body2: '#d97706', glow: '#f59e0b', outline: '#450a0a', spine: '#fbbf24', belly: '#fef3c7', cost: 700 },
+  { id: 'dark_galaxy', get name() { return window.I18N ? window.I18N.getSkinName('dark_galaxy') : 'Cosmic Void Dragon'; }, unlockLevel: 19, shape: 'cosmic', head: '#c084fc', body1: '#7e22ce', body2: '#3b0764', glow: '#a855f7', outline: '#17032c', spine: '#00f0ff', belly: '#581c87', cost: 850 },
+  { id: 'frozen_frost', get name() { return window.I18N ? window.I18N.getSkinName('frozen_frost') : 'Glacial Frost Drake'; }, unlockLevel: 24, shape: 'frost', head: '#38bdf8', body1: '#0284c7', body2: '#bae6fd', glow: '#00f0ff', outline: '#082f49', spine: '#e0f2fe', belly: '#f0f9ff', cost: 1000 }
 ];
+
+function createMilestone(day, target, rewardIcon, rewardCoins, rewardXp, rewardItem, rewardSkin) {
+  return {
+    day,
+    get tag() {
+      const m = window.I18N && window.I18N.getMilestone(day);
+      return m ? m.tag : `DAY ${day}`;
+    },
+    target,
+    get goalText() {
+      const m = window.I18N && window.I18N.getMilestone(day);
+      return m ? m.goalText : `Reach ${target} Score`;
+    },
+    rewardIcon,
+    get rewardText() {
+      const m = window.I18N && window.I18N.getMilestone(day);
+      return m ? m.rewardText : `+${rewardCoins} Coins`;
+    },
+    rewardCoins,
+    rewardXp,
+    rewardItem,
+    rewardSkin
+  };
+}
 
 // 🎁 Günlük Sadakat & Büyük Aşama Ödülleri (1..7, 15, 30, 60, 90, 120, 150, 180, 365. Günler)
 const SEVEN_DAY_REWARDS = [
-  { day: 1, tag: 'GÜN 1', target: 25, goalText: '25 Skora Ulaş', rewardIcon: '🪙', rewardText: '+200 Altın', rewardCoins: 200, rewardXp: 30, rewardItem: null },
-  { day: 2, tag: 'GÜN 2', target: 50, goalText: '50 Skora Ulaş', rewardIcon: '🕶️', rewardText: 'Havalı Yıldız Başı', rewardCoins: 350, rewardXp: 50, rewardItem: 'sunglasses' },
-  { day: 3, tag: 'GÜN 3', target: 100, goalText: '100 Skora Ulaş', rewardIcon: '🪙', rewardText: '+500 Altın & 80 XP', rewardCoins: 500, rewardXp: 80, rewardItem: null },
-  { day: 4, tag: 'GÜN 4', target: 180, goalText: '180 Skora Ulaş', rewardIcon: '🤠', rewardText: 'Vahşi Kovboy Başı', rewardCoins: 750, rewardXp: 100, rewardItem: 'cowboy' },
-  { day: 5, tag: 'GÜN 5', target: 300, goalText: '300 Skora Ulaş', rewardIcon: '🪙', rewardText: '+1000 Altın & 150 XP', rewardCoins: 1000, rewardXp: 150, rewardItem: null },
-  { day: 6, tag: 'GÜN 6', target: 450, goalText: '450 Skora Ulaş', rewardIcon: '🥷', rewardText: 'Kara Ninja Başı', rewardCoins: 1500, rewardXp: 200, rewardItem: 'ninja' },
-  { day: 7, tag: '1. HAFTA 👑', target: 600, goalText: '600 Skora Ulaş', rewardIcon: '👑', rewardText: 'Altın Taç Başı + 2500🪙', rewardCoins: 2500, rewardXp: 300, rewardItem: 'crown' },
-  { day: 15, tag: '15. GÜN ⭐', target: 800, goalText: '800 Usta Skor', rewardIcon: '😈', rewardText: 'Şeytan Lordu Başı + 3500🪙', rewardCoins: 3500, rewardXp: 500, rewardItem: 'horns' },
-  { day: 30, tag: '1. AY 🌟', target: 1000, goalText: '1000 Efsane Skor', rewardIcon: '🤖', rewardText: 'Sayborg Başı + Magma Kostümü + 5000🪙', rewardCoins: 5000, rewardXp: 1000, rewardItem: 'robot', rewardSkin: 'fire_tiger' },
-  { day: 60, tag: '2. AY ⭐', target: 1300, goalText: '1300 Kadim Skor', rewardIcon: '🧙', rewardText: 'Büyücü Başı + Gölge Kostümü + 7500🪙', rewardCoins: 7500, rewardXp: 1500, rewardItem: 'wizard', rewardSkin: 'shadow_ninja' },
-  { day: 90, tag: '3. AY 🏆', target: 1600, goalText: '1600 Şampiyon', rewardIcon: '💀', rewardText: 'Lanetli Kafa + Samuray + 10.000🪙', rewardCoins: 10000, rewardXp: 2000, rewardItem: 'skull', rewardSkin: 'samurai_warlord' },
-  { day: 120, tag: '4. AY 👑', target: 2000, goalText: '2000 Yüce Efendi', rewardIcon: '😇', rewardText: 'Kutsal Melek + Hiçlik Ejderi + 15.000🪙', rewardCoins: 15000, rewardXp: 3000, rewardItem: 'halo', rewardSkin: 'dark_galaxy' },
-  { day: 150, tag: '5. AY 🚀', target: 2400, goalText: '2400 Kozmik Titan', rewardIcon: '🐱', rewardText: 'Siber Kedi + 20.000🪙', rewardCoins: 20000, rewardXp: 4000, rewardItem: 'cat_ears' },
-  { day: 180, tag: '6. AY 👑', target: 3000, goalText: '3000 Zirve Efsanesi', rewardIcon: '🏴‍☠️', rewardText: 'Korsan Başı + Buzul Ejderi + 30.000🪙', rewardCoins: 30000, rewardXp: 5000, rewardItem: 'pirate', rewardSkin: 'frozen_frost' },
-  { day: 365, tag: '1 YIL 💥', target: 4000, goalText: '4000 Ölümsüz Skor', rewardIcon: '🔥', rewardText: '50.000🪙 Devasa Hazine & 10.000 XP', rewardCoins: 50000, rewardXp: 10000, rewardItem: null }
+  createMilestone(1, 25, '🪙', 200, 30, null),
+  createMilestone(2, 50, '🕶️', 350, 50, 'sunglasses'),
+  createMilestone(3, 100, '🪙', 500, 80, null),
+  createMilestone(4, 180, '🤠', 750, 100, 'cowboy'),
+  createMilestone(5, 300, '🪙', 1000, 150, null),
+  createMilestone(6, 450, '🥷', 1500, 200, 'ninja'),
+  createMilestone(7, 600, '👑', 2500, 300, 'crown'),
+  createMilestone(15, 800, '😈', 3500, 500, 'horns'),
+  createMilestone(30, 1000, '🤖', 5000, 1000, 'robot', 'fire_tiger'),
+  createMilestone(60, 1300, '🧙', 7500, 1500, 'wizard', 'shadow_ninja'),
+  createMilestone(90, 1600, '💀', 10000, 2000, 'skull', 'samurai_warlord'),
+  createMilestone(120, 2000, '😇', 15000, 3000, 'halo', 'dark_galaxy'),
+  createMilestone(150, 2400, '🐱', 20000, 4000, 'cat_ears'),
+  createMilestone(180, 3000, '🏴‍☠️', 30000, 5000, 'pirate', 'frozen_frost'),
+  createMilestone(365, 4000, '🔥', 50000, 10000, null)
 ];
 const SEVEN_DAY_MILESTONES = SEVEN_DAY_REWARDS;
 
 // Şapka / Baş Kostümü Tanımları (Seçildiğinde kafanın üstünde havada durmaz, kafanın kendisi olur!)
 const HATS = [
-  { id: 'none', name: 'Orijinal Yılan Başı', icon: '🐍', cost: 0, type: 'head' },
-  { id: 'horns', name: 'Şeytan Lordu Başı', icon: '😈', cost: 150, type: 'head' },
-  { id: 'ninja', name: 'Kara Ninja Başı', icon: '🥷', cost: 200, type: 'head' },
-  { id: 'cat_ears', name: 'Siber Kedi Başı', icon: '🐱', cost: 250, type: 'head' },
-  { id: 'cowboy', name: 'Vahşi Kovboy Başı', icon: '🤠', cost: 300, type: 'head' },
-  { id: 'pirate', name: 'Korsan Kaptan Başı', icon: '🏴‍☠️', cost: 350, type: 'head' },
-  { id: 'halo', name: 'Kutsal Melek Başı', icon: '😇', cost: 350, type: 'head' },
-  { id: 'skull', name: 'Lanetli Kafatası', icon: '💀', cost: 400, type: 'head' },
-  { id: 'robot', name: 'Sayborg Robot Başı', icon: '🤖', cost: 450, type: 'head' },
-  { id: 'crown', name: 'Altın Taçlı Kral Başı', icon: '👑', cost: 250, type: 'head' },
-  { id: 'sunglasses', name: 'Havalı Yıldız Başı', icon: '😎', cost: 200, type: 'head' },
-  { id: 'party_hat', name: 'Çılgın Parti Başı', icon: '🥳', cost: 180, type: 'head' },
-  { id: 'wizard', name: 'Kadim Büyücü Başı', icon: '🧙', cost: 350, type: 'head' }
+  { id: 'none', get name() { return window.I18N ? window.I18N.getHatName('none') : 'Original Snake Head'; }, icon: '🐍', cost: 0, type: 'head' },
+  { id: 'horns', get name() { return window.I18N ? window.I18N.getHatName('horns') : 'Demon Lord Head'; }, icon: '😈', cost: 150, type: 'head' },
+  { id: 'ninja', get name() { return window.I18N ? window.I18N.getHatName('ninja') : 'Dark Ninja Head'; }, icon: '🥷', cost: 200, type: 'head' },
+  { id: 'cat_ears', get name() { return window.I18N ? window.I18N.getHatName('cat_ears') : 'Cyber Cat Head'; }, icon: '🐱', cost: 250, type: 'head' },
+  { id: 'cowboy', get name() { return window.I18N ? window.I18N.getHatName('cowboy') : 'Wild Cowboy Head'; }, icon: '🤠', cost: 300, type: 'head' },
+  { id: 'pirate', get name() { return window.I18N ? window.I18N.getHatName('pirate') : 'Pirate Captain Head'; }, icon: '🏴‍☠️', cost: 350, type: 'head' },
+  { id: 'halo', get name() { return window.I18N ? window.I18N.getHatName('halo') : 'Holy Angel Head'; }, icon: '😇', cost: 350, type: 'head' },
+  { id: 'skull', get name() { return window.I18N ? window.I18N.getHatName('skull') : 'Cursed Skull'; }, icon: '💀', cost: 400, type: 'head' },
+  { id: 'robot', get name() { return window.I18N ? window.I18N.getHatName('robot') : 'Cyborg Robot Head'; }, icon: '🤖', cost: 450, type: 'head' },
+  { id: 'crown', get name() { return window.I18N ? window.I18N.getHatName('crown') : 'Golden Crown King Head'; }, icon: '👑', cost: 250, type: 'head' },
+  { id: 'sunglasses', get name() { return window.I18N ? window.I18N.getHatName('sunglasses') : 'Cool Star Head'; }, icon: '😎', cost: 200, type: 'head' },
+  { id: 'party_hat', get name() { return window.I18N ? window.I18N.getHatName('party_hat') : 'Crazy Party Head'; }, icon: '🥳', cost: 180, type: 'head' },
+  { id: 'wizard', get name() { return window.I18N ? window.I18N.getHatName('wizard') : 'Ancient Wizard Head'; }, icon: '🧙', cost: 350, type: 'head' }
 ];
 
 const BOT_NAMES = [
   'Timothy', 'Hugo', 'Fox', 'Kowalski', 'Shadow', 'Alice', 'Rex', 'Viper',
-  'GamerTR', 'Phantom', 'Dragon', 'Blaze', 'Storm', 'Luna', 'Titan'
+  'Speedy', 'Phantom', 'Dragon', 'Blaze', 'Storm', 'Luna', 'Titan'
 ];
 
 const FOOD_TYPES = [
@@ -1031,14 +1055,24 @@ class Worm {
     const headX = this.x - camera.x;
     const headY = this.y - camera.y;
 
-    // Viewport Culling: Ekran dışındaki solucanların çizimini tamamen atla (Büyük FPS artışı!)
-    const maxSpan = Math.max(140, this.radius * 2 + this.body.length * 5);
-    if (
-      headX < -maxSpan ||
-      headX > screenW + maxSpan ||
-      headY < -maxSpan ||
-      headY > screenH + maxSpan
-    ) {
+    // Viewport Culling: Solucanın başı veya herhangi bir gövde parçası ekranda mı?
+    // Geniş kamera (zoom: 0.85) ve uzun gövde dönüşleri için cömert sınır (Solucanların yok olmasını %100 önler)
+    const margin = 220;
+    let isVisible = (headX >= -margin && headX <= screenW + margin && headY >= -margin && headY <= screenH + margin);
+
+    if (!isVisible && this.body && this.body.length > 0) {
+      for (let i = 0; i < this.body.length; i++) {
+        const seg = this.body[i];
+        const sx = seg.x - camera.x;
+        const sy = seg.y - camera.y;
+        if (sx >= -margin && sx <= screenW + margin && sy >= -margin && sy <= screenH + margin) {
+          isVisible = true;
+          break;
+        }
+      }
+    }
+
+    if (!isVisible) {
       return;
     }
 
@@ -1439,23 +1473,23 @@ window.showInGameAlert = function(message, type = 'info', title = null) {
   if (window.toastTimeout) clearTimeout(window.toastTimeout);
 
   let icon = '📢';
-  let defaultTitle = 'BİLDİRİM';
+  let defaultTitle = window.I18N ? window.I18N.t('alert_title_notice') : 'NOTIFICATION';
 
   if (type === 'level_up') {
     icon = '🎉';
-    defaultTitle = 'TEBRİKLER!';
+    defaultTitle = window.I18N ? window.I18N.t('toast_congrats') : 'CONGRATULATIONS!';
     if (typeof sounds !== 'undefined') sounds.playLevelUp();
   } else if (type === 'success') {
     icon = '✓';
-    defaultTitle = 'BAŞARILI';
+    defaultTitle = window.I18N ? window.I18N.t('alert_title_success') : 'SUCCESS';
     if (typeof sounds !== 'undefined') sounds.playWheelWin();
   } else if (type === 'warning') {
     icon = '⚠️';
-    defaultTitle = 'DİKKAT';
+    defaultTitle = window.I18N ? window.I18N.t('alert_title_warning') : 'WARNING';
     if (typeof sounds !== 'undefined') sounds.playDie();
   } else if (type === 'info') {
     icon = 'ℹ️';
-    defaultTitle = 'BİLGİ';
+    defaultTitle = window.I18N ? window.I18N.t('alert_title_info') : 'INFO';
     if (typeof sounds !== 'undefined') sounds.playSpecial();
   }
 
@@ -1475,17 +1509,18 @@ window.showInGameAlert = function(message, type = 'info', title = null) {
 // Tarayıcının çirkin dış alert popup penceresini engelle, oyunun şık renkli bildirimine dönüştür!
 window.alert = function(msg) {
   let type = 'info';
-  let title = 'BİLDİRİM';
+  let title = window.I18N ? window.I18N.t('alert_title_notice') : 'NOTIFICATION';
   if (typeof msg === 'string') {
-    if (msg.includes('TEBRİKLER') || msg.includes('Kazandın')) {
+    const upper = msg.toUpperCase();
+    if (upper.includes('TEBRİKLER') || upper.includes('CONGRAT') || upper.includes('KAZANDIN') || upper.includes('WON')) {
       type = 'level_up';
-      title = '🎉 TEBRİKLER!';
-    } else if (msg.includes('Yetersiz') || msg.includes('Hata') || msg.includes('koptu') || msg.includes('bulunamadı')) {
+      title = '🎉 ' + (window.I18N ? window.I18N.t('toast_congrats') : 'CONGRATULATIONS!');
+    } else if (upper.includes('YETERSIZ') || upper.includes('ENOUGH') || upper.includes('HATA') || upper.includes('ERROR') || upper.includes('TIMEOUT')) {
       type = 'warning';
-      title = '⚠️ DİKKAT';
-    } else if (msg.includes('kopyalandı') || msg.includes('Kopyalandı') || msg.includes('Bağlandı')) {
+      title = '⚠️ ' + (window.I18N ? window.I18N.t('alert_title_warning') : 'WARNING');
+    } else if (upper.includes('KOPYALANDI') || upper.includes('COPIED') || upper.includes('BAĞLANDI') || upper.includes('CONNECTED')) {
       type = 'success';
-      title = '✓ BAŞARILI';
+      title = '✓ ' + (window.I18N ? window.I18N.t('alert_title_success') : 'SUCCESS');
     }
   }
   window.showInGameAlert(msg, type, title);
@@ -1606,7 +1641,7 @@ class WormArenaGame {
     safeExec('initEvents', () => this.initEvents());
     safeExec('initMultiplayerEvents', () => this.initMultiplayerEvents());
     safeExec('initShopAndWheelUI', () => this.initShopAndWheelUI());
-    safeExec('initFoods', () => this.initFoods(1800));
+    safeExec('initFoods', () => this.initFoods(3500));
     safeExec('updateEconomyUI', () => this.updateEconomyUI());
     safeExec('drawSkinPreview', () => this.drawSkinPreview());
     safeExec('drawFortuneWheel', () => this.drawFortuneWheel(0));
@@ -1635,11 +1670,17 @@ class WormArenaGame {
     const statusText = document.getElementById('splashStatusText');
     if (!splash) return;
 
-    const messages = [
+    const isTr = window.I18N && window.I18N.currentLang === 'tr';
+    const messages = isTr ? [
       '🍬 Renkli şekerler toplanıyor...',
       '🐍 Sevimli solucanlar uyanıyor...',
       '⭐ Harita pırıl pırıl parlatılıyor...',
       '🎉 Oynamaya hazır mısın?!'
+    ] : [
+      '🍬 Collecting colorful candies...',
+      '🐍 Cute worms waking up...',
+      '⭐ Polishing the arena map...',
+      '🎉 Ready to play?!'
     ];
 
     let progress = 0;
@@ -1800,6 +1841,29 @@ class WormArenaGame {
       });
     }
 
+    const settingLanguage = document.getElementById('settingLanguage');
+    if (settingLanguage) {
+      const activeLang = (window.I18N && window.I18N.currentLang) ? window.I18N.currentLang : (localStorage.getItem('worm_language') === 'tr' ? 'tr' : 'en');
+      settingLanguage.value = activeLang;
+      settingLanguage.addEventListener('change', (e) => {
+        const val = e.target.value === 'tr' ? 'tr' : 'en';
+        try {
+          localStorage.setItem('worm_language', val);
+        } catch (err) {}
+        if (window.I18N) {
+          if (typeof window.I18N.setLang === 'function') {
+            window.I18N.setLang(val, false);
+          } else if (typeof window.I18N.setLanguage === 'function') {
+            window.I18N.setLanguage(val, false);
+          }
+        }
+        // Kullanıcı isteği: Dil seçildiğinde oyun kapanıp açılsın (yenilensin) ve yeni dille başlasın
+        setTimeout(() => {
+          window.location.reload();
+        }, 120);
+      });
+    }
+
     const openSettingsBtn = document.getElementById('openSettingsBtn');
     const openSettingsShortcutBtn = document.getElementById('openSettingsShortcutBtn');
     const closeSettingsBtn = document.getElementById('closeSettingsBtn');
@@ -1829,12 +1893,21 @@ class WormArenaGame {
 
     if (resetProgressBtn) {
       resetProgressBtn.addEventListener('click', () => {
-        if (confirm('Tüm ilerlemeniz, kazandığınız rozetler ve altınlarınız sıfırlanacaktır. Emin misiniz?')) {
+        const confirmMsg = window.I18N ? window.I18N.t('settings_confirm_reset') : 'All your progress, unlocked badges, and coins will be reset. Are you sure?';
+        if (confirm(confirmMsg)) {
           localStorage.clear();
           window.location.reload();
         }
       });
     }
+  }
+
+  onLanguageChanged() {
+    if (this.renderShopItems) this.renderShopItems();
+    if (this.renderQuestsUI) this.renderQuestsUI();
+    if (this.updateEconomyUI) this.updateEconomyUI();
+    if (this.updateWheelUIStatus) this.updateWheelUIStatus();
+    if (this.drawSkinPreview) this.drawSkinPreview();
   }
 
   saveSettings() {
@@ -1878,7 +1951,7 @@ class WormArenaGame {
     this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
 
-  initFoods(count) {
+  initFoods(count = 3500) {
     this.foods = [];
     for (let i = 0; i < count; i++) {
       this.spawnFood();
@@ -1886,7 +1959,7 @@ class WormArenaGame {
   }
 
   // Çok oyunculu odada tüm oyuncuların aynı yemleri görmesi için tohum (seed) tabanlı üretim
-  initFoodsWithSeed(seedNum, count = 800) {
+  initFoodsWithSeed(seedNum, count = 2000) {
     this.foods = [];
     let s = (typeof seedNum === 'string')
       ? seedNum.split('').reduce((acc, c) => (acc * 31 + c.charCodeAt(0)) & 0xffffffff, 12345)
@@ -1962,7 +2035,8 @@ class WormArenaGame {
     let name = nameInput ? nameInput.value.trim() : '';
     if (!name || name.length === 0) {
       if (autoGenerateIfEmpty) {
-        name = `Oyuncu_${Math.floor(100 + Math.random() * 900)}`;
+        const defaultPrefix = window.I18N ? window.I18N.t('player_default') : 'Player';
+        name = `${defaultPrefix}_${Math.floor(100 + Math.random() * 900)}`;
         if (nameInput) nameInput.value = name;
       } else {
         if (nameInput) {
@@ -1970,7 +2044,9 @@ class WormArenaGame {
           nameInput.classList.add('input-error-shake');
           setTimeout(() => nameInput.classList.remove('input-error-shake'), 600);
         }
-        window.showInGameAlert('Lütfen oyuna başlamadan önce oyuncu adınızı giriniz!', 'warning', '⚠️ İSİM GEREKLİ');
+        const alertTitle = window.I18N ? window.I18N.t('alert_name_required_title') : '⚠️ NAME REQUIRED';
+        const alertMsg = window.I18N ? window.I18N.t('alert_name_required_msg') : 'Please enter your player name before starting the game!';
+        window.showInGameAlert(alertMsg, 'warning', alertTitle);
         return null;
       }
     }
@@ -1982,7 +2058,9 @@ class WormArenaGame {
     const skin = SKINS[this.selectedSkinIndex];
     const playerLevel = this.getLevelFromXp(this.xp);
     if ((skin.unlockLevel || 1) > playerLevel) {
-      window.showInGameAlert(`Bu kostüm Seviye ${skin.unlockLevel}'de açılır! Lütfen seviyenize uygun bir kostüm seçin.`, 'warning', '🔒 KİLİTLİ KOSTÜM');
+      const alertTitle = window.I18N ? window.I18N.t('alert_locked_skin_title') : '🔒 LOCKED SKIN';
+      const alertMsg = window.I18N ? window.I18N.t('alert_locked_skin_msg', { level: skin.unlockLevel }) : `This skin unlocks at Level ${skin.unlockLevel}! Please select an unlocked skin.`;
+      window.showInGameAlert(alertMsg, 'warning', alertTitle);
       return false;
     }
     return true;
@@ -1990,7 +2068,8 @@ class WormArenaGame {
 
   getPlayerName() {
     const nameInput = document.getElementById('playerNameInput');
-    return (nameInput && nameInput.value.trim() ? nameInput.value.trim() : 'Oyuncu').substring(0, 14);
+    const defaultName = window.I18N ? window.I18N.t('player_default') : 'Player';
+    return (nameInput && nameInput.value.trim() ? nameInput.value.trim() : defaultName).substring(0, 14);
   }
 
   getSelectedSkinId() {
@@ -2105,7 +2184,9 @@ class WormArenaGame {
     sounds.playSpecial();
     this.vibrate(40);
     if (window.showInGameAlert) {
-      window.showInGameAlert('🚀 Arena Başlatıldı! Hayatta Kal!', 'success', '🎮 OYUN BAŞLADI');
+      const alertTitle = window.I18N ? window.I18N.t('alert_game_started_title') : '🎮 GAME STARTED';
+      const alertMsg = window.I18N ? window.I18N.t('alert_game_started_msg') : '🚀 Arena Started! Survive & Dominate!';
+      window.showInGameAlert(alertMsg, 'success', alertTitle);
     }
   }
 
@@ -2113,7 +2194,8 @@ class WormArenaGame {
   startMultiplayerClientGame(mySpawn = null) {
     let playerName = this.validatePlayerName(true);
     if (!playerName) {
-      playerName = this.getPlayerName() || `Oyuncu_${Math.floor(100 + Math.random() * 900)}`;
+      const defaultPrefix = window.I18N ? window.I18N.t('player_default') : 'Player';
+      playerName = this.getPlayerName() || `${defaultPrefix}_${Math.floor(100 + Math.random() * 900)}`;
     }
 
     sounds.init();
@@ -2169,7 +2251,9 @@ class WormArenaGame {
     sounds.playSpecial();
     this.vibrate(40);
     if (window.showInGameAlert) {
-      window.showInGameAlert('🚀 Oyun Başladı! İyi Şanslar!', 'success', '🎮 OYUN BAŞLADI');
+      const alertTitle = window.I18N ? window.I18N.t('alert_game_started_title') : '🎮 GAME STARTED';
+      const alertMsg = window.I18N ? window.I18N.t('alert_game_good_luck') : '🚀 Game Started! Good luck!';
+      window.showInGameAlert(alertMsg, 'success', alertTitle);
     }
   }
 
@@ -2307,6 +2391,20 @@ class WormArenaGame {
       const allWorms = [this.player, ...this.network.remotePlayers.values()];
       this.player.update(this.worldWidth, this.worldHeight, this.foods, allWorms);
 
+      // İstemcide diğer oyuncuları ve botları kareler arası akıcı ilerlet (Dead-Reckoning & Smooth 60 FPS)
+      for (const rw of this.network.remotePlayers.values()) {
+        if (!rw.isDead) {
+          let diff = rw.targetAngle - rw.angle;
+          while (diff < -Math.PI) diff += Math.PI * 2;
+          while (diff > Math.PI) diff -= Math.PI * 2;
+          rw.angle += diff * 0.12;
+
+          const spd = rw.isBoosting ? rw.boostSpeed : rw.baseSpeed;
+          rw.x += Math.cos(rw.angle) * spd * 0.75;
+          rw.y += Math.sin(rw.angle) * spd * 0.75;
+        }
+      }
+
       // İstemcide yerel yem yeme kontrolü (Yıldızlar ve tüm yemler anında yenir, 0 gecikme!)
       const clientEaten = this.checkFoodEating([this.player]);
       if (clientEaten && clientEaten.length > 0 && this.network && this.network.isConnReady(this.network.hostConn)) {
@@ -2320,10 +2418,11 @@ class WormArenaGame {
 
       // Arena duvarına çarpma kontrolü
       if (this.player.isDead) {
-        this.handlePlayerDeath('Arena Duvarına');
+        const wallName = window.I18N ? window.I18N.t('arena_wall') : 'Arena Wall';
+        this.handlePlayerDeath(wallName);
         if (this.network.isMultiplayer && !this.network.isHost && this.network.hostConn) {
           try {
-            this.network.hostConn.send({ type: 'CLIENT_DIED', killedBy: 'Arena Duvarına' });
+            this.network.hostConn.send({ type: 'CLIENT_DIED', killedBy: wallName });
           } catch (e) {}
         }
         return;
@@ -2355,7 +2454,8 @@ class WormArenaGame {
 
       // Arena duvarına çarpma kontrolü
       if (this.player.isDead) {
-        this.handlePlayerDeath('Arena Duvarına');
+        const wallName = window.I18N ? window.I18N.t('arena_wall') : 'Arena Wall';
+        this.handlePlayerDeath(wallName);
       }
 
       this.camera.x += (this.player.x - window.innerWidth / 2 - this.camera.x) * 0.1;
@@ -2374,7 +2474,7 @@ class WormArenaGame {
       if (!rw.isDead) {
         rw.update(this.worldWidth, this.worldHeight, this.foods, allWorms);
         if (rw.isDead) {
-          rw.killedBy = 'Arena Duvarına';
+          rw.killedBy = window.I18N ? window.I18N.t('arena_wall') : 'Arena Wall';
           this.dropFoodFromWorm(rw);
         }
       }
@@ -2414,14 +2514,24 @@ class WormArenaGame {
       if (eatenList.length > 0) {
         this.pendingEatenFoods.push(...eatenList);
       }
-      const hasPendingFoods = this.pendingNewFoods.length > 0;
-      const hasPendingEaten = this.pendingEatenFoods.length > 0;
-      if (this.broadcastTickCounter % 2 === 0 || hasPendingFoods || hasPendingEaten) {
+      if (this.broadcastTickCounter % 2 === 0) {
         const foodsToSend = this.pendingNewFoods;
         const eatenToSend = this.pendingEatenFoods;
         this.pendingNewFoods = [];
         this.pendingEatenFoods = [];
         this.network.broadcastState(allWorms, foodsToSend, eatenToSend);
+      }
+    }
+
+    // Arenada yiyecek yoğunluğunu her zaman yüksek ve sıkı tut (Kullanıcı isteği: 1 kat daha fazla yem)
+    const targetFoodCount = (this.network && this.network.isMultiplayer) ? 2000 : 3500;
+    if (this.foods.length < targetFoodCount && (!this.network || !this.network.isMultiplayer || this.network.isHost)) {
+      const spawnBatch = Math.min(6, targetFoodCount - this.foods.length);
+      for (let k = 0; k < spawnBatch; k++) {
+        const nf = this.spawnFood();
+        if (newFoods) {
+          newFoods.push({ x: Math.round(nf.x), y: Math.round(nf.y), type: nf.type });
+        }
       }
     }
 
@@ -2439,15 +2549,18 @@ class WormArenaGame {
     if (this.player.magnetTimer > 0) {
       this.hudPowerupBadge.classList.remove('hidden');
       this.hudPowerupIcon.textContent = '🧲';
-      this.hudPowerupText.textContent = `MIKNATIS (${Math.ceil(this.player.magnetTimer / 60)}s)`;
+      const label = window.I18N ? window.I18N.t('hud_powerup_magnet') : 'MAGNET';
+      this.hudPowerupText.textContent = `${label} (${Math.ceil(this.player.magnetTimer / 60)}s)`;
     } else if (this.player.ghostTimer > 0) {
       this.hudPowerupBadge.classList.remove('hidden');
       this.hudPowerupIcon.textContent = '👻';
-      this.hudPowerupText.textContent = `HAYALET (${Math.ceil(this.player.ghostTimer / 60)}s)`;
+      const label = window.I18N ? window.I18N.t('hud_powerup_ghost') : 'GHOST';
+      this.hudPowerupText.textContent = `${label} (${Math.ceil(this.player.ghostTimer / 60)}s)`;
     } else if (this.player.doublePointsTimer > 0) {
       this.hudPowerupBadge.classList.remove('hidden');
       this.hudPowerupIcon.textContent = '2️⃣';
-      this.hudPowerupText.textContent = `2x PUAN (${Math.ceil(this.player.doublePointsTimer / 60)}s)`;
+      const label = window.I18N ? window.I18N.t('hud_powerup_double') : '2X POINTS';
+      this.hudPowerupText.textContent = `${label} (${Math.ceil(this.player.doublePointsTimer / 60)}s)`;
     } else {
       this.hudPowerupBadge.classList.add('hidden');
     }
@@ -2456,7 +2569,8 @@ class WormArenaGame {
   triggerGoldenRainEvent() {
     sounds.playSpecial();
     this.eventBanner.classList.remove('hidden');
-    document.getElementById('eventText').textContent = 'MERKEZDE BÜYÜK ALTIN YAĞMURU BAŞLADI!';
+    const bannerText = window.I18N ? window.I18N.t('event_gold_rain') : 'A HUGE GOLD RAIN HAS STARTED IN THE CENTER!';
+    document.getElementById('eventText').textContent = bannerText;
 
     const cx = this.worldWidth / 2;
     const cy = this.worldHeight / 2;
@@ -2564,7 +2678,8 @@ class WormArenaGame {
           });
           this.foods.splice(i, 1);
 
-          if (newFoods && this.foods.length < 600) {
+          const targetFoodCount = (this.network && this.network.isMultiplayer) ? 2000 : 3500;
+          if (newFoods && this.foods.length < targetFoodCount) {
             const nf = this.spawnFood();
             newFoods.push({ x: Math.round(nf.x), y: Math.round(nf.y), type: nf.type });
           }
@@ -2691,9 +2806,8 @@ class WormArenaGame {
   dropFoodFromWorm(worm) {
     if (!worm) return;
     const bodyLen = (worm.body && Array.isArray(worm.body)) ? worm.body.length : 0;
-    // Yılanın boyuna ve puanına göre orantılı yıldızlı yemek miktarı
-    // Küçük yılanlar için 8-15 arası, büyük yılanlar için en fazla 40 adet
-    const count = Math.min(40, Math.max(8, Math.floor(bodyLen * 0.8)));
+    // Yılanın boyuna ve puanına göre orantılı yıldızlı yemek miktarı (Bol yem saçılması)
+    const count = Math.min(70, Math.max(16, Math.floor(bodyLen * 1.4)));
 
     for (let i = 0; i < count; i++) {
       let posX = worm.x;
@@ -2782,7 +2896,10 @@ class WormArenaGame {
 
         const dropCount = Math.min(40, Math.max(8, Math.floor(((this.player.body && this.player.body.length) || 11) * 0.8)));
         if (window.showInGameAlert) {
-          window.showInGameAlert(`💥 ${killedBy ? killedBy + ' ile çarpıştın!' : 'Ezildin!'} Yılanın ${dropCount} adet Yıldızlı Yemeğe Dönüştü! ⭐`, 'warning', '⭐ YILDIZLI YEMEK DÖNÜŞÜMÜ');
+          const alertTitle = window.I18N ? window.I18N.t('alert_star_food_transform_title') : '⭐ STAR FOOD CONVERSION';
+          const killerName = killedBy || (window.I18N ? window.I18N.t('an_obstacle') : 'an obstacle');
+          const alertMsg = window.I18N ? window.I18N.t('alert_star_food_transform_msg', { killer: killerName, count: dropCount }) : `💥 Crashed into ${killerName}! Your worm turned into ${dropCount} Star Foods! ⭐`;
+          window.showInGameAlert(alertMsg, 'warning', alertTitle);
         }
 
         const earnedCoins = Math.max(10, Math.floor(this.player.score / 20) + this.player.kills * 25);
@@ -2798,7 +2915,10 @@ class WormArenaGame {
         const finalKillsEl = document.getElementById('finalKillsVal');
         const finalRankEl = document.getElementById('finalRankVal');
 
-        if (killedByEl) killedByEl.textContent = `${killedBy ? killedBy + ' adlı solucana' : 'Bir engele'} çarptın!`;
+        if (killedByEl) {
+          const killerName = killedBy || (window.I18N ? window.I18N.t('an_obstacle') : 'an obstacle');
+          killedByEl.textContent = window.I18N ? window.I18N.t('gameover_killed_by', { killer: killerName }) : `You crashed into ${killerName}! 🍭`;
+        }
         if (earnedCoinsEl) earnedCoinsEl.textContent = earnedCoins;
         if (finalScoreEl) finalScoreEl.textContent = Math.floor(this.player.score);
         if (finalKillsEl) finalKillsEl.textContent = this.player.kills;
@@ -2854,9 +2974,10 @@ class WormArenaGame {
     topWorms.forEach((w, idx) => {
       const isMe = w === this.player;
       const rankClass = idx === 0 ? 'top-1' : idx === 1 ? 'top-2' : idx === 2 ? 'top-3' : '';
+      const youTag = isMe ? (window.I18N ? ' ' + window.I18N.t('hud_you_tag') : ' (You)') : '';
       html += `
         <li class="leaderboard-item ${isMe ? 'is-me' : ''} ${rankClass}">
-          <span class="lb-name">${idx + 1}. ${this.escapeHtml ? this.escapeHtml(w.name) : w.name} ${isMe ? '(Sen)' : ''}</span>
+          <span class="lb-name">${idx + 1}. ${this.escapeHtml ? this.escapeHtml(w.name) : w.name}${youTag}</span>
           <span class="lb-score">${Math.floor(w.score)}</span>
         </li>
       `;
@@ -3020,7 +3141,9 @@ class WormArenaGame {
       sounds.playLevelUp();
       const bonusCoins = newLevel * 50;
       this.addCoins(bonusCoins);
-      window.showInGameAlert(`Seviye ${newLevel} oldun! Hesabına +${bonusCoins} Altın eklendi!`, 'level_up', '🎉 SEVİYE ATLADIN!');
+      const title = window.I18N ? window.I18N.t('alert_level_up_title') : '🎉 LEVEL UP!';
+      const msg = window.I18N ? window.I18N.t('alert_level_up_msg', { level: newLevel, coins: bonusCoins }) : `Reached Level ${newLevel}! +${bonusCoins} Coins added to your account!`;
+      window.showInGameAlert(msg, 'level_up', title);
       this.drawSkinPreview();
     }
     this.updateEconomyUI();
@@ -3045,7 +3168,8 @@ class WormArenaGame {
     const activeHatDef = HATS.find(h => h.id === this.equippedHat);
     const activeHatNameEl = document.getElementById('activeHatName');
     if (activeHatNameEl) {
-      activeHatNameEl.textContent = `Baş Kostümü: ${activeHatDef ? activeHatDef.name : 'Orijinal'}`;
+      const hatName = activeHatDef ? (window.I18N ? window.I18N.getHatName(activeHatDef.id) : activeHatDef.name) : (window.I18N ? window.I18N.t('head_original') : 'Original');
+      activeHatNameEl.textContent = window.I18N ? window.I18N.t('head_costume_label', { name: hatName }) : `Head Costume: ${hatName}`;
     }
 
     this.updateActiveBadgeUI();
@@ -3213,27 +3337,29 @@ class WormArenaGame {
     if (!this.canSpinWheelToday()) {
       if (spinBtn) {
         spinBtn.disabled = true;
-        spinBtn.innerHTML = '<span>🔒 BUGÜNKÜ HAKKIN BİTTİ</span>';
+        const btnText = window.I18N ? window.I18N.t('wheel_limit_btn') : "TODAY'S CHANCE USED";
+        spinBtn.innerHTML = `<span>🔒 ${btnText}</span>`;
         spinBtn.style.opacity = '0.6';
         spinBtn.style.cursor = 'not-allowed';
       }
       if (resultMsg) {
-        resultMsg.textContent = '⏳ Çarkı günde sadece 1 kez çevirebilirsin. Yarın tekrar gel!';
+        resultMsg.textContent = window.I18N ? window.I18N.t('wheel_limit_msg') : '⏳ You can only spin the wheel once a day. Come back tomorrow!';
         resultMsg.classList.remove('hidden');
       }
       if (wheelBadge) {
-        wheelBadge.textContent = 'Yarın';
+        wheelBadge.textContent = window.I18N ? window.I18N.t('wheel_badge_tomorrow') : 'Tomorrow';
         wheelBadge.style.background = '#64748b';
       }
     } else {
       if (spinBtn && !this.isSpinningWheel) {
         spinBtn.disabled = false;
-        spinBtn.innerHTML = '<span>ŞANS ÇARKINI ÇEVİR 🎯</span>';
+        const btnText = window.I18N ? window.I18N.t('wheel_spin_btn') : 'SPIN FORTUNE WHEEL 🎯';
+        spinBtn.innerHTML = `<span>${btnText}</span>`;
         spinBtn.style.opacity = '1';
         spinBtn.style.cursor = 'pointer';
       }
       if (wheelBadge) {
-        wheelBadge.textContent = 'Ücretsiz';
+        wheelBadge.textContent = window.I18N ? window.I18N.t('wheel_badge_free') : 'Free';
         wheelBadge.style.background = '#ef4444';
       }
     }
@@ -3241,7 +3367,9 @@ class WormArenaGame {
 
   spinFortuneWheel() {
     if (!this.canSpinWheelToday()) {
-      window.showInGameAlert('Çarkı günde sadece 1 kez çevirebilirsin! Yarın tekrar gel.', 'warning', '⏳ GÜNLÜK HAK');
+      const title = window.I18N ? window.I18N.t('alert_wheel_daily_limit_title') : '⏳ DAILY LIMIT';
+      const msg = window.I18N ? window.I18N.t('alert_wheel_daily_limit_msg') : 'You can only spin once a day! Come back tomorrow.';
+      window.showInGameAlert(msg, 'warning', title);
       return;
     }
 
@@ -3251,14 +3379,15 @@ class WormArenaGame {
     spinBtn.disabled = true;
     resultMsg.classList.add('hidden');
 
+    const isTr = window.I18N && window.I18N.currentLang === 'tr';
     const slices = [
-      { text: '50 Altın', type: 'coin', val: 50 },
-      { text: '100 Altın', type: 'coin', val: 100 },
-      { text: '500 BÜYÜK ÖDÜL ALTIN!', type: 'coin', val: 500 },
+      { text: isTr ? '50 Altın' : '50 Coins', type: 'coin', val: 50 },
+      { text: isTr ? '100 Altın' : '100 Coins', type: 'coin', val: 100 },
+      { text: isTr ? '500 BÜYÜK ÖDÜL ALTIN!' : '500 GRAND PRIZE COINS!', type: 'coin', val: 500 },
       { text: '50 XP', type: 'xp', val: 50 },
-      { text: '75 Altın', type: 'coin', val: 75 },
-      { text: '200 Altın', type: 'coin', val: 200 },
-      { text: '150 Altın', type: 'coin', val: 150 },
+      { text: isTr ? '75 Altın' : '75 Coins', type: 'coin', val: 75 },
+      { text: isTr ? '200 Altın' : '200 Coins', type: 'coin', val: 200 },
+      { text: isTr ? '150 Altın' : '150 Coins', type: 'coin', val: 150 },
       { text: '100 XP', type: 'xp', val: 100 }
     ];
 
@@ -3297,7 +3426,7 @@ class WormArenaGame {
         else this.addXp(reward.val);
 
         sounds.playWheelWin();
-        resultMsg.textContent = `🎉 Tebrikler! ${reward.text} Kazandın!`;
+        resultMsg.textContent = window.I18N ? window.I18N.t('wheel_win_msg', { reward: reward.text }) : `🎉 Congratulations! You won ${reward.text}!`;
         resultMsg.classList.remove('hidden');
       }
     };
@@ -3310,19 +3439,28 @@ class WormArenaGame {
     hatsGrid.innerHTML = '';
     skinsGrid.innerHTML = '';
 
+    const freeText = window.I18N ? window.I18N.t('shop_item_free') : 'Free';
+    const equippedHatText = window.I18N ? window.I18N.t('shop_btn_equipped') : '✓ EQUIPPED';
+    const equipHatText = window.I18N ? window.I18N.t('shop_btn_equip') : 'EQUIP';
+    const buyText = window.I18N ? window.I18N.t('shop_btn_buy') : 'BUY';
+    const selectedSkinText = window.I18N ? window.I18N.t('shop_btn_selected') : '✓ SELECTED';
+    const lockedSkinText = window.I18N ? window.I18N.t('shop_btn_locked') : '🔒 LOCKED';
+    const selectSkinText = window.I18N ? window.I18N.t('shop_btn_select') : 'SELECT';
+
     // Şapkalar
     HATS.forEach(hat => {
       const isOwned = this.unlockedHats.includes(hat.id);
       const isEquipped = this.equippedHat === hat.id;
+      const hatTitle = window.I18N ? window.I18N.getHatName(hat.id) : hat.name;
 
       const card = document.createElement('div');
       card.className = `shop-item-card ${isEquipped ? 'equipped' : ''}`;
       card.innerHTML = `
         <span class="shop-item-icon">${hat.icon}</span>
-        <span class="shop-item-name">${hat.name}</span>
-        <span class="shop-item-cost">${hat.cost > 0 ? `${hat.cost} 🪙` : 'Ücretsiz'}</span>
+        <span class="shop-item-name">${hatTitle}</span>
+        <span class="shop-item-cost">${hat.cost > 0 ? `${hat.cost} 🪙` : freeText}</span>
         <button class="shop-action-btn ${isEquipped ? 'equipped-btn' : isOwned ? 'equip-btn' : 'buy-btn'}">
-          ${isEquipped ? '✓ KUŞANILDI' : isOwned ? 'KUŞAN' : 'SATIN AL'}
+          ${isEquipped ? equippedHatText : isOwned ? equipHatText : buyText}
         </button>
       `;
 
@@ -3347,7 +3485,9 @@ class WormArenaGame {
             this.drawSkinPreview();
             sounds.playSpecial();
           } else {
-            window.showInGameAlert('Yetersiz altın! Arenada meyve toplayarak veya çarkı çevirerek altın kazanabilirsin.', 'warning', '⚠️ YETERSİZ ALTIN');
+            const title = window.I18N ? window.I18N.t('alert_insufficient_coins_title') : '⚠️ NOT ENOUGH COINS';
+            const msg = window.I18N ? window.I18N.t('alert_insufficient_coins_msg') : 'Not enough coins! Collect fruits in the arena or spin the wheel to earn coins.';
+            window.showInGameAlert(msg, 'warning', title);
           }
         }
       });
@@ -3361,16 +3501,28 @@ class WormArenaGame {
       const playerLevel = this.getLevelFromXp(this.xp);
       const isLevelLocked = (skin.unlockLevel || 1) > playerLevel;
 
+      const unlockCostText = isLevelLocked
+        ? (window.I18N ? window.I18N.t('shop_unlock_level', { level: skin.unlockLevel }) : `Unlocks at Lv.${skin.unlockLevel}`)
+        : (skin.cost > 0 ? `${skin.cost} 🪙` : freeText);
+
+      const actionText = isEquipped
+        ? selectedSkinText
+        : isLevelLocked
+        ? lockedSkinText
+        : isOwned
+        ? selectSkinText
+        : buyText;
+
       const card = document.createElement('div');
       card.className = `shop-item-card ${isEquipped ? 'equipped' : ''} ${isLevelLocked ? 'level-locked-card' : ''}`;
       card.innerHTML = `
         <div style="width:36px;height:36px;border-radius:50%;background:${skin.head};border:2px solid ${skin.outline};box-shadow:0 0 10px ${skin.glow};margin-bottom:4px;display:flex;align-items:center;justify-content:center;">
           ${isLevelLocked ? '🔒' : ''}
         </div>
-        <span class="shop-item-name">${skin.name}</span>
-        <span class="shop-item-cost">${isLevelLocked ? `Lv.${skin.unlockLevel}'de Açılır` : skin.cost > 0 ? `${skin.cost} 🪙` : 'Ücretsiz'}</span>
+        <span class="shop-item-name">${window.I18N ? window.I18N.getSkinName(skin.id) : skin.name}</span>
+        <span class="shop-item-cost">${unlockCostText}</span>
         <button class="shop-action-btn ${isEquipped ? 'equipped-btn' : isLevelLocked ? 'disabled-lock-btn' : isOwned ? 'equip-btn' : 'buy-btn'}">
-          ${isEquipped ? '✓ SEÇİLDİ' : isLevelLocked ? '🔒 KİLİTLİ' : isOwned ? 'SEÇ' : 'SATIN AL'}
+          ${actionText}
         </button>
       `;
 
@@ -3378,7 +3530,9 @@ class WormArenaGame {
       btn.addEventListener('click', () => {
         if (isEquipped) return;
         if (isLevelLocked) {
-          window.showInGameAlert(`Bu kostümü açmak için Seviye ${skin.unlockLevel} olmalısın!`, 'warning', '🔒 SEVİYE GEREKLİ');
+          const title = window.I18N ? window.I18N.t('alert_level_required_title') : '🔒 LEVEL REQUIRED';
+          const msg = window.I18N ? window.I18N.t('alert_level_required_msg', { level: skin.unlockLevel }) : `You must reach Level ${skin.unlockLevel} to unlock this skin!`;
+          window.showInGameAlert(msg, 'warning', title);
           return;
         }
         if (isOwned) {
@@ -3395,7 +3549,9 @@ class WormArenaGame {
             this.drawSkinPreview();
             sounds.playSpecial();
           } else {
-            window.showInGameAlert('Bu kostümü almak için yeterli altının yok!', 'warning', '⚠️ YETERSİZ ALTIN');
+            const title = window.I18N ? window.I18N.t('alert_insufficient_coins_title') : '⚠️ NOT ENOUGH COINS';
+            const msg = window.I18N ? window.I18N.t('alert_skin_insufficient_coins_msg') : 'You do not have enough coins to purchase this skin!';
+            window.showInGameAlert(msg, 'warning', title);
           }
         }
       });
@@ -3406,12 +3562,12 @@ class WormArenaGame {
   // ==================== GÖREVLER & 7 GÜNLÜK HEDEF VE ÖDÜL SİSTEMİ ====================
   initQuestsSystem() {
     const defaultQuests = [
-      { id: 'eat_foods', title: '40 Adet Yiyecek Ye 🍎', target: 40, current: 0, reward: 120, claimed: false },
-      { id: 'kill_worms', title: '2 Solucanı Tuzağa Düşürüp Ez 💀', target: 2, current: 0, reward: 200, claimed: false },
-      { id: 'reach_score', title: '200 Skora Ulaş ve Büyü ⭐', target: 200, current: 0, reward: 180, claimed: false },
-      { id: 'use_turbo', title: '5 Kez Turbo / Hızlanma Kullan ⚡', target: 5, current: 0, reward: 100, claimed: false },
-      { id: 'collect_gold', title: '8 Altın Yıldız / Değerli Yem Topla ⭐', target: 8, current: 0, reward: 150, claimed: false },
-      { id: 'collect_powerup', title: '2 Güçlendirme (Mıknatıs/Hayalet/2X) Al 🧲', target: 2, current: 0, reward: 160, claimed: false }
+      { id: 'eat_foods', get title() { return window.I18N ? window.I18N.getQuestTitle('eat_foods') : 'Eat 40 Foods 🍎'; }, target: 40, current: 0, reward: 120, claimed: false },
+      { id: 'kill_worms', get title() { return window.I18N ? window.I18N.getQuestTitle('kill_worms') : 'Trap and Eliminate 2 Worms 💀'; }, target: 2, current: 0, reward: 200, claimed: false },
+      { id: 'reach_score', get title() { return window.I18N ? window.I18N.getQuestTitle('reach_score') : 'Reach 200 Score & Grow ⭐'; }, target: 200, current: 0, reward: 180, claimed: false },
+      { id: 'use_turbo', get title() { return window.I18N ? window.I18N.getQuestTitle('use_turbo') : 'Use Turbo / Boost 5 Times ⚡'; }, target: 5, current: 0, reward: 100, claimed: false },
+      { id: 'collect_gold', get title() { return window.I18N ? window.I18N.getQuestTitle('collect_gold') : 'Collect 8 Golden Stars / Shiny Food ⭐'; }, target: 8, current: 0, reward: 150, claimed: false },
+      { id: 'collect_powerup', get title() { return window.I18N ? window.I18N.getQuestTitle('collect_powerup') : 'Grab 2 Powerups (Magnet/Ghost/2X) 🧲'; }, target: 2, current: 0, reward: 160, claimed: false }
     ];
 
     try {
@@ -3514,7 +3670,7 @@ class WormArenaGame {
     const loginCountBadge = document.getElementById('streakLoginCountBadge');
 
     if (loginCountBadge) {
-      loginCountBadge.textContent = `📅 Toplam Giriş: ${this.totalLoginDays || 1}. Gün`;
+      loginCountBadge.textContent = window.I18N ? window.I18N.t('streak_total_login', { day: this.totalLoginDays || 1 }) : `📅 Total Logins: Day ${this.totalLoginDays || 1}`;
     }
 
     if (questsList) questsList.innerHTML = '';
@@ -3539,10 +3695,13 @@ class WormArenaGame {
         const box = document.createElement('div');
         box.className = `streak-day-box ${isMajorMilestone ? 'major-milestone' : ''} ${isClaimed ? 'claimed' : canClaim ? 'claimable-day active-day' : isCurrent ? 'active-day' : ''}`;
 
-        const btnText = isClaimed ? '✓ ALINDI' : canClaim ? '🎁 ÖDÜLÜ AL' : `${currentVal}/${ms.target}`;
+        const claimedText = window.I18N ? window.I18N.t('streak_btn_claimed') : '✓ CLAIMED';
+        const claimText = window.I18N ? window.I18N.t('streak_btn_claim') : '🎁 CLAIM REWARD';
+        const btnText = isClaimed ? claimedText : canClaim ? claimText : `${currentVal}/${ms.target}`;
 
+        const dayPrefix = window.I18N && window.I18N.currentLang === 'tr' ? 'GÜN ' : 'DAY ';
         box.innerHTML = `
-          <div class="day-badge-tag">${ms.tag || ('GÜN ' + ms.day)}</div>
+          <div class="day-badge-tag">${ms.tag || (dayPrefix + ms.day)}</div>
           <div class="day-reward-icon">${ms.rewardIcon}</div>
           <div class="day-reward-val">${ms.rewardText}</div>
           <div class="day-reward-desc">${ms.goalText}</div>
@@ -3557,7 +3716,7 @@ class WormArenaGame {
         const actionBtn = box.querySelector('.day-action-btn');
 
         if (canClaim) {
-          box.title = 'Ödülünü almak için dokun!';
+          box.title = window.I18N ? window.I18N.t('streak_claim_tooltip') : 'Tap to claim your reward!';
           box.style.cursor = 'pointer';
           if (actionBtn) {
             actionBtn.style.cursor = 'pointer';
@@ -3613,7 +3772,9 @@ class WormArenaGame {
                 try { sounds.playWheelWin(); } catch (_) {}
               }
               if (window.showInGameAlert) {
-                window.showInGameAlert(`🎉 TEBRİKLER! ${ms.day}. Gün Büyük Aşama Ödülü (${ms.rewardText}) Hesabına Eklendi!`, 'level_up', '🎁 EFSANEVİ AŞAMA ÖDÜLÜ');
+                const title = window.I18N ? window.I18N.t('alert_milestone_claim_title') : '🎁 LEGENDARY MILESTONE REWARD';
+                const msg = window.I18N ? window.I18N.t('alert_milestone_claim_msg', { day: ms.day, reward: ms.rewardText }) : `🎉 CONGRATULATIONS! Day ${ms.day} Grand Milestone Reward (${ms.rewardText}) has been added to your account!`;
+                window.showInGameAlert(msg, 'level_up', title);
               }
             } catch (err) {
               console.error('Milestone claim error:', err);
@@ -3650,16 +3811,22 @@ class WormArenaGame {
         const pct = Math.min(100, Math.floor((q.current / q.target) * 100));
         const isDone = q.current >= q.target;
 
+        const qTitle = window.I18N ? window.I18N.getQuestTitle(q.id) : (q.title || '');
+        const qRewardText = window.I18N ? window.I18N.t('quest_coins_reward', { coins: q.reward }) : `+${q.reward} 🪙 Coins`;
+        const qClaimedText = window.I18N ? window.I18N.t('quest_btn_claimed') : 'CLAIMED';
+        const qClaimText = window.I18N ? window.I18N.t('quest_btn_claim') : 'CLAIM REWARD';
+        const qBtnText = q.claimed ? qClaimedText : isDone ? qClaimText : `${q.current}/${q.target}`;
+
         const item = document.createElement('div');
         item.className = 'quest-item';
         item.innerHTML = `
           <div class="quest-info">
-            <span class="quest-title">${q.title}</span>
-            <span class="quest-reward">+${q.reward} 🪙 Altın</span>
+            <span class="quest-title">${qTitle}</span>
+            <span class="quest-reward">${qRewardText}</span>
             <div class="quest-progress-bar"><div class="quest-progress-fill" style="width:${pct}%"></div></div>
           </div>
           <button type="button" class="quest-claim-btn ${isDone && !q.claimed ? '' : 'disabled'}">
-            ${q.claimed ? 'ALINDI' : isDone ? 'ÖDÜLÜ AL' : `${q.current}/${q.target}`}
+            ${qBtnText}
           </button>
         `;
 
@@ -3682,7 +3849,9 @@ class WormArenaGame {
                 try { sounds.playWheelWin(); } catch (_) {}
               }
               if (window.showInGameAlert) {
-                window.showInGameAlert(`🎉 Görev Tamamlandı! +${q.reward} Altın Kazandın!`, 'success', '🪙 GÖREV ÖDÜLÜ');
+                const title = window.I18N ? window.I18N.t('alert_quest_claim_title') : '🪙 QUEST REWARD';
+                const msg = window.I18N ? window.I18N.t('alert_quest_claim_msg', { reward: q.reward }) : `🎉 Quest Completed! +${q.reward} Coins Earned!`;
+                window.showInGameAlert(msg, 'success', title);
               }
             } catch (err) {
               console.error('Quest claim error:', err);
@@ -3858,28 +4027,32 @@ class WormArenaGame {
     this.ctx.textAlign = 'center';
     this.ctx.textBaseline = 'middle';
 
+    const isTr = window.I18N && window.I18N.currentLang === 'tr';
+    const sectorPrefix = isTr ? 'SEKTÖR ' : 'SECTOR ';
+    const lanePrefix = isTr ? 'HAT ' : 'LANE ';
+
     for (let c = 0; c < 8; c++) {
       const x = c * sectorSize + sectorSize / 2 - this.camera.x;
       // Üst Duvar
       if (top > -30 && top < h + 30 && x > -50 && x < w + 50) {
-        this.ctx.fillText(`SEKTÖR ${cols[c]}`, x, top + 22);
+        this.ctx.fillText(`${sectorPrefix}${cols[c]}`, x, top + 22);
       }
       // Alt Duvar
       const bottom = top + this.worldHeight;
       if (bottom > -30 && bottom < h + 30 && x > -50 && x < w + 50) {
-        this.ctx.fillText(`SEKTÖR ${cols[c]}`, x, bottom - 22);
+        this.ctx.fillText(`${sectorPrefix}${cols[c]}`, x, bottom - 22);
       }
     }
     for (let r = 0; r < 8; r++) {
       const y = r * sectorSize + sectorSize / 2 - this.camera.y;
       // Sol Duvar
       if (left > -30 && left < w + 30 && y > -50 && y < h + 50) {
-        this.ctx.fillText(`HAT ${r + 1}`, left + 30, y);
+        this.ctx.fillText(`${lanePrefix}${r + 1}`, left + 30, y);
       }
       // Sağ Duvar
       const right = left + this.worldWidth;
       if (right > -30 && right < w + 30 && y > -50 && y < h + 50) {
-        this.ctx.fillText(`HAT ${r + 1}`, right - 30, y);
+        this.ctx.fillText(`${lanePrefix}${r + 1}`, right - 30, y);
       }
     }
   }
@@ -4099,14 +4272,15 @@ class WormArenaGame {
     if (lockOverlay && lockText) {
       if (isLocked) {
         lockOverlay.classList.remove('hidden');
-        lockText.textContent = `Seviye ${skin.unlockLevel}'de Açılır`;
+        lockText.textContent = window.I18N ? window.I18N.t('skin_unlock_level', { level: skin.unlockLevel }) : `Unlocks at Level ${skin.unlockLevel}`;
       } else {
         lockOverlay.classList.add('hidden');
       }
     }
 
     if (skinNameEl) {
-      skinNameEl.textContent = isLocked ? `🔒 ${skin.name}` : skin.name;
+      const skinTitle = window.I18N ? window.I18N.getSkinName(skin.id) : skin.name;
+      skinNameEl.textContent = isLocked ? `🔒 ${skinTitle}` : skinTitle;
     }
 
     pCtx.clearRect(0, 0, pCanvas.width, pCanvas.height);
@@ -4253,12 +4427,15 @@ class WormArenaGame {
           clientLobbyList.innerHTML = '';
           players.forEach((p) => {
             const isMe = p.id === this.network.myPeerId;
+            const youTag = isMe ? (window.I18N ? ' (' + window.I18N.t('you') + ')' : ' (You)') : '';
+            const leaderBadge = window.I18N ? window.I18N.t('mp_badge_leader') : 'LEADER';
+            const readyBadge = window.I18N ? window.I18N.t('mp_badge_ready') : 'READY';
             const li = document.createElement('li');
             li.className = p.isHost ? 'lobby-item is-host' : 'lobby-item';
             li.innerHTML = `
               <span class="lobby-player-icon">${p.isHost ? '👑' : '🟢'}</span>
-              <span class="lobby-player-name">${this.escapeHtml(p.name)} ${isMe ? '(Sen)' : ''}</span>
-              <span class="lobby-ready-badge ${p.isHost ? 'leader' : ''}">${p.isHost ? 'LİDER' : 'HAZIR'}</span>
+              <span class="lobby-player-name">${this.escapeHtml(p.name)}${youTag}</span>
+              <span class="lobby-ready-badge ${p.isHost ? 'leader' : ''}">${p.isHost ? leaderBadge : readyBadge}</span>
             `;
             clientLobbyList.appendChild(li);
           });
@@ -4272,12 +4449,13 @@ class WormArenaGame {
         if (waitingRoomCodeVal && (roomCode || this.network.roomCode)) {
           waitingRoomCodeVal.textContent = roomCode || this.network.roomCode;
         }
+        const waitingNotice = window.I18N ? window.I18N.t('mp_waiting_status_text') : "Host hasn't started the game yet. Please wait...";
         if (waitingStatusText) {
-          waitingStatusText.textContent = 'Oda sahibi henüz oyunu başlatmadı. Lütfen bekleyin...';
+          waitingStatusText.textContent = waitingNotice;
         }
         const waitingOwnerNotice = document.getElementById('waitingOwnerNotice');
         if (waitingOwnerNotice) {
-          waitingOwnerNotice.textContent = 'Oda sahibi henüz oyunu başlatmadı. Lütfen bekleyin...';
+          waitingOwnerNotice.textContent = waitingNotice;
         }
       } else {
         // HOST / ODA KURUCU GÖRÜNÜMÜ: Sekmeler ve Oda Kurma Alanı Kesinlikle Açık Kalır!
@@ -4297,12 +4475,15 @@ class WormArenaGame {
         if (lobbyList) {
           lobbyList.innerHTML = '';
           players.forEach((p) => {
+            const youHostTag = p.isHost ? (window.I18N ? ' (' + window.I18N.t('you') + ')' : ' (You)') : '';
+            const leaderBadge = window.I18N ? window.I18N.t('mp_badge_leader') : 'LEADER';
+            const readyBadge = window.I18N ? window.I18N.t('mp_badge_ready') : 'READY';
             const li = document.createElement('li');
             li.className = p.isHost ? 'lobby-item is-host' : 'lobby-item';
             li.innerHTML = `
               <span class="lobby-player-icon">${p.isHost ? '👑' : '🟢'}</span>
-              <span class="lobby-player-name">${this.escapeHtml(p.name)} ${p.isHost ? '(Sen)' : ''}</span>
-              <span class="lobby-ready-badge ${p.isHost ? 'leader' : ''}">${p.isHost ? 'LİDER' : 'HAZIR'}</span>
+              <span class="lobby-player-name">${this.escapeHtml(p.name)}${youHostTag}</span>
+              <span class="lobby-ready-badge ${p.isHost ? 'leader' : ''}">${p.isHost ? leaderBadge : readyBadge}</span>
             `;
             lobbyList.appendChild(li);
           });
@@ -4311,13 +4492,15 @@ class WormArenaGame {
 
         if (startRoomGameBtnText) {
           if (players.length > 1) {
-            startRoomGameBtnText.textContent = `OYUNU BAŞLAT (${players.length} Oyuncuyla Başla) 🚀`;
+            startRoomGameBtnText.textContent = window.I18N ? window.I18N.t('mp_start_btn_count', { count: players.length }) : `START GAME (Start with ${players.length} Players) 🚀`;
           } else {
-            startRoomGameBtnText.textContent = 'OYUNU BAŞLAT 🚀';
+            startRoomGameBtnText.textContent = window.I18N ? window.I18N.t('mp_start_btn') : 'START GAME 🚀';
           }
         }
         if (lobbyStatusBadge) {
-          lobbyStatusBadge.textContent = players.length > 1 ? `🟢 ${players.length} Oyuncu Hazır` : '🟢 Lobi Açık';
+          const playersReadyText = window.I18N ? (window.I18N.currentLang === 'tr' ? `🟢 ${players.length} Oyuncu Hazır` : `🟢 ${players.length} Players Ready`) : `🟢 ${players.length} Players Ready`;
+          const lobbyOpenText = window.I18N ? window.I18N.t('mp_lobby_status_open') : '🟢 Lobby Open';
+          lobbyStatusBadge.textContent = players.length > 1 ? playersReadyText : lobbyOpenText;
         }
       }
     };
@@ -4328,7 +4511,7 @@ class WormArenaGame {
     };
 
     const clientRetryJoinBtn = document.getElementById('clientRetryJoinBtn');
-    const WAITING_MSG = 'Oda sahibi henüz oyunu başlatmadı. Lütfen bekleyin...';
+    const WAITING_MSG = window.I18N ? window.I18N.t('mp_waiting_status_text') : "Host hasn't started the game yet. Please wait...";
 
     // Bağlanma denemesi sırasında durum yazısını canlı güncelle (1/3, 2/3, 3/3)
     this.network.onJoinStatus = (msg) => {
@@ -4352,8 +4535,8 @@ class WormArenaGame {
       }).catch(() => {
         const statusEl = document.getElementById('waitingStatusText');
         const noticeEl = document.getElementById('waitingOwnerNotice');
-        if (statusEl) statusEl.textContent = '⚠️ Oda sahibine bağlanılamadı.';
-        if (noticeEl) noticeEl.textContent = 'Oda sahibinin uygulaması açık ve odası kurulu olmalı. "Tekrar Bağlan" ile yeniden deneyin.';
+        if (statusEl) statusEl.textContent = window.I18N ? (window.I18N.currentLang === 'tr' ? '⚠️ Oda sahibine bağlanılamadı.' : '⚠️ Could not connect to host.') : '⚠️ Could not connect to host.';
+        if (noticeEl) noticeEl.textContent = window.I18N ? window.I18N.t('net_timeout_msg') : 'Could not reach host. Please verify the host has the game open and room active, then click "Reconnect".';
         if (clientRetryJoinBtn) clientRetryJoinBtn.classList.remove('hidden');
         throw new Error('join failed');
       });
@@ -4414,7 +4597,7 @@ class WormArenaGame {
           roomLinkInput.value = this.getInviteLink(roomCode);
         }
         if (lobbyStatusBadge) {
-          lobbyStatusBadge.textContent = '🟡 Bağlanıyor...';
+          lobbyStatusBadge.textContent = window.I18N ? window.I18N.t('mp_lobby_status_connecting') : '🟡 Connecting...';
           lobbyStatusBadge.className = 'lobby-live-badge waiting';
         }
         renderLobbyPlayers(this.network.getLobbyList(), roomCode);
@@ -4424,19 +4607,19 @@ class WormArenaGame {
             if (myRoomCodeEl) myRoomCodeEl.textContent = code;
             if (roomLinkInput) roomLinkInput.value = this.getInviteLink(code);
             if (lobbyStatusBadge) {
-              lobbyStatusBadge.textContent = '🟢 Lobi Açık';
+              lobbyStatusBadge.textContent = window.I18N ? window.I18N.t('mp_lobby_status_open') : '🟢 Lobby Open';
               lobbyStatusBadge.className = 'lobby-live-badge';
             }
             renderLobbyPlayers(this.network.getLobbyList(), code);
           }).catch(() => {
             if (lobbyStatusBadge) {
-              lobbyStatusBadge.textContent = '⚠️ Tekrar Dene';
+              lobbyStatusBadge.textContent = window.I18N ? window.I18N.t('mp_lobby_status_retry') : '⚠️ Try Again';
               lobbyStatusBadge.className = 'lobby-live-badge waiting';
             }
           });
         } else {
           if (lobbyStatusBadge) {
-            lobbyStatusBadge.textContent = '🟢 Lobi Açık';
+            lobbyStatusBadge.textContent = window.I18N ? window.I18N.t('mp_lobby_status_open') : '🟢 Lobby Open';
             lobbyStatusBadge.className = 'lobby-live-badge';
           }
         }
@@ -4472,9 +4655,11 @@ class WormArenaGame {
       copyCodeBtn.addEventListener('click', () => {
         if (this.network.roomCode) {
           navigator.clipboard.writeText(this.network.roomCode);
-          copyCodeBtn.textContent = '✓ Kopyalandı!';
-          setTimeout(() => { copyCodeBtn.textContent = '📋 Kodu Kopyala'; }, 2000);
-          window.showInGameAlert(`Oda kodu panoya kopyalandı: ${this.network.roomCode}`, 'success', '📋 KOD KOPYALANDI');
+          copyCodeBtn.textContent = window.I18N ? window.I18N.t('mp_code_copied') : '✓ Copied!';
+          setTimeout(() => { copyCodeBtn.textContent = window.I18N ? window.I18N.t('mp_copy_code_btn') : '📋 Copy Code'; }, 2000);
+          const copyMsg = window.I18N ? window.I18N.t('alert_code_copied_msg', { code: this.network.roomCode }) : `Room code copied to clipboard: ${this.network.roomCode}`;
+          const copyTitle = window.I18N ? window.I18N.t('alert_code_copied_title') : '📋 CODE COPIED';
+          window.showInGameAlert(copyMsg, 'success', copyTitle);
         }
       });
     }
@@ -4484,7 +4669,10 @@ class WormArenaGame {
       copyRoomLinkBtn.addEventListener('click', async () => {
         const roomCode = this.network.roomCode;
         if (!roomCode) {
-          window.showInGameAlert('Oda kodu hazırlanıyor, lütfen bekleyin...', 'warning');
+          window.showInGameAlert(
+            window.I18N ? window.I18N.t('alert_code_preparing') : 'Room code is being generated, please wait...',
+            'warning'
+          );
           return;
         }
         const inviteUrl = this.getInviteLink(roomCode);
@@ -4502,9 +4690,12 @@ class WormArenaGame {
         // B) Tarayıcı / iOS / Sistem Paylaşım API'si
         if (navigator.share) {
           try {
+            const isTr = window.I18N && window.I18N.currentLang === 'tr';
             await navigator.share({
-              title: 'Worm Arena - Yılan Savaşı',
-              text: `🎮 Worm Arena odama davetlisin!\nOda Kodu: ${roomCode}\nTek tıkla savaşa katıl 👇\n`,
+              title: isTr ? 'Worm Arena - Solucan & Yılan Savaşı' : 'Worm Arena - Snake & Worm Battle',
+              text: isTr
+                ? `🎮 Worm Arena odama davetlisin!\nOda Kodu: ${roomCode}\nTek tıkla savaşa katıl 👇\n`
+                : `🎮 You're invited to my Worm Arena room!\nRoom Code: ${roomCode}\nJoin the battle with one click 👇\n`,
               url: inviteUrl
             });
             return;
@@ -4515,9 +4706,13 @@ class WormArenaGame {
 
         // C) Masaüstü Tarayıcı Fallback: Panoya Kopyala
         const copyFallback = () => {
-          copyRoomLinkBtn.textContent = '✓ Kopyalandı!';
-          setTimeout(() => { copyRoomLinkBtn.textContent = '📤 Paylaş'; }, 2000);
-          window.showInGameAlert('Oda linki panoya kopyalandı!', 'success', '🔗 LİNK KOPYALANDI');
+          copyRoomLinkBtn.textContent = window.I18N ? window.I18N.t('mp_code_copied') : '✓ Copied!';
+          setTimeout(() => { copyRoomLinkBtn.textContent = window.I18N ? window.I18N.t('mp_share_btn') : '📤 Share'; }, 2000);
+          window.showInGameAlert(
+            window.I18N ? window.I18N.t('alert_link_copied_msg') : 'Room link copied to clipboard!',
+            'success',
+            window.I18N ? window.I18N.t('alert_link_copied_title') : '🔗 LINK COPIED'
+          );
         };
 
         if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -4558,20 +4753,20 @@ class WormArenaGame {
 
         if (!this.network.isHost || !this.network.peer || this.network.peer.destroyed || this.network.peer.disconnected) {
           if (lobbyStatusBadge) {
-            lobbyStatusBadge.textContent = '🟡 Bağlanıyor...';
+            lobbyStatusBadge.textContent = window.I18N ? window.I18N.t('mp_lobby_status_connecting') : '🟡 Connecting...';
             lobbyStatusBadge.className = 'lobby-live-badge waiting';
           }
           this.network.createRoom(roomCode).then(code => {
             if (myRoomCodeEl) myRoomCodeEl.textContent = code;
             if (roomLinkInput) roomLinkInput.value = this.getInviteLink(code);
             if (lobbyStatusBadge) {
-              lobbyStatusBadge.textContent = '🟢 Lobi Açık';
+              lobbyStatusBadge.textContent = window.I18N ? window.I18N.t('mp_lobby_status_open') : '🟢 Lobby Open';
               lobbyStatusBadge.className = 'lobby-live-badge';
             }
             renderLobbyPlayers(this.network.getLobbyList(), code);
           }).catch(() => {
             if (lobbyStatusBadge) {
-              lobbyStatusBadge.textContent = '⚠️ Tekrar Dene';
+              lobbyStatusBadge.textContent = window.I18N ? window.I18N.t('mp_lobby_status_retry') : '⚠️ Try Again';
               lobbyStatusBadge.className = 'lobby-live-badge waiting';
             }
           });
@@ -4618,8 +4813,8 @@ class WormArenaGame {
         let customName = joinPlayerNameInput ? joinPlayerNameInput.value.trim() : '';
 
         // İsim zorunlu: Kullanıcı isim yazmadan odaya katılamaz!
-        if (!customName || customName.length < 2 || customName.startsWith('Oyuncu_')) {
-          joinStatusMsg.textContent = '⚠️ Lütfen oyuncu adınızı girin! İsimsiz odaya katılamazsınız.';
+        if (!customName || customName.length < 2 || customName.startsWith('Player_') || customName.startsWith('Oyuncu_')) {
+          joinStatusMsg.textContent = window.I18N ? window.I18N.t('mp_err_name_required') : '⚠️ Please enter your player name! Cannot join without a name.';
           if (joinPlayerNameInput) {
             joinPlayerNameInput.focus();
             joinPlayerNameInput.classList.add('input-error-shake');
@@ -4637,7 +4832,7 @@ class WormArenaGame {
         const code = joinRoomCodeInput.value.trim();
         if (!code) {
           joinRoomCodeInput.focus();
-          joinStatusMsg.textContent = '⚠️ Lütfen 4 haneli oda kodunu girin!';
+          joinStatusMsg.textContent = window.I18N ? window.I18N.t('mp_err_code_required') : '⚠️ Please enter the 4-digit room code!';
           return;
         }
 
@@ -4653,21 +4848,27 @@ class WormArenaGame {
         if (waitingRoomContent) waitingRoomContent.classList.remove('hidden');
 
         if (waitingRoomCodeVal) waitingRoomCodeVal.textContent = code;
-        if (waitingStatusText) waitingStatusText.textContent = 'Oda sahibi oyunu daha başlatmadı ama bekleme odasındasınız';
+        const waitingNotice = window.I18N ? window.I18N.t('mp_waiting_notice_text') : 'The host has not started the game yet, but you are in the waiting room.';
+        if (waitingStatusText) waitingStatusText.textContent = waitingNotice;
         const waitingOwnerNotice = document.getElementById('waitingOwnerNotice');
-        if (waitingOwnerNotice) waitingOwnerNotice.textContent = 'Oda sahibi oyunu daha başlatmadı ama bekleme odasındasınız';
+        if (waitingOwnerNotice) waitingOwnerNotice.textContent = waitingNotice;
+
+        const hostNameText = window.I18N ? window.I18N.t('mp_waiting_host_name') : 'Room Host';
+        const leaderBadge = window.I18N ? window.I18N.t('mp_badge_leader') : 'LEADER';
+        const youText = window.I18N ? window.I18N.t('you') : 'You';
+        const connectingBadge = window.I18N ? window.I18N.t('mp_badge_connecting') : 'CONNECTING';
 
         if (clientLobbyList) {
           clientLobbyList.innerHTML = `
             <li class="lobby-item is-host">
               <span class="lobby-player-icon">👑</span>
-              <span class="lobby-player-name">Oda Sahibi</span>
-              <span class="lobby-ready-badge leader">LİDER</span>
+              <span class="lobby-player-name">${hostNameText}</span>
+              <span class="lobby-ready-badge leader">${leaderBadge}</span>
             </li>
             <li class="lobby-item">
               <span class="lobby-player-icon">🟢</span>
-              <span class="lobby-player-name">${this.escapeHtml(customName)} (Sen)</span>
-              <span class="lobby-ready-badge">BAĞLANIYOR</span>
+              <span class="lobby-player-name">${this.escapeHtml(customName)} (${youText})</span>
+              <span class="lobby-ready-badge">${connectingBadge}</span>
             </li>
           `;
         }
@@ -4692,7 +4893,9 @@ class WormArenaGame {
         if (roomTabsBar) roomTabsBar.classList.remove('hidden');
         if (tabJoinRoom) tabJoinRoom.click();
         if (window.showInGameAlert) {
-          window.showInGameAlert('Odadan ayrıldınız.', 'info', '🚪 AYRILINDI');
+          const alertMsg = window.I18N ? window.I18N.t('alert_left_room_msg') : 'You left the room.';
+          const alertTitle = window.I18N ? window.I18N.t('alert_left_room_title') : '🚪 LEFT ROOM';
+          window.showInGameAlert(alertMsg, 'info', alertTitle);
         }
       });
     }
@@ -4960,7 +5163,9 @@ class WormArenaGame {
       respawnBtn.addEventListener('click', () => {
         if (this.network.isMultiplayer && !this.network.isHost) {
           this.network.requestRespawn();
-          window.showInGameAlert('Yeniden canlanma isteği gönderildi...', 'info', '🔄 CANLANMA');
+          const alertMsg = window.I18N ? window.I18N.t('alert_respawn_requested_msg') : 'Respawn request sent...';
+          const alertTitle = window.I18N ? window.I18N.t('alert_respawn_requested_title') : '🔄 RESPAWN';
+          window.showInGameAlert(alertMsg, 'info', alertTitle);
         } else if (this.network.isMultiplayer && this.network.isHost) {
           const skin = SKINS[this.selectedSkinIndex] || SKINS[0];
           const rx = Math.round(this.worldWidth / 2 + (Math.random() - 0.5) * 600);
@@ -5160,7 +5365,7 @@ class WormArenaGame {
         const proceedToRoom = () => {
           const typedName = inviteInput ? inviteInput.value.trim() : '';
           if (!typedName || typedName.length < 2) {
-            if (inviteError) inviteError.textContent = '⚠️ Lütfen adınızı yazın! İsimsiz odaya katılamazsınız.';
+            if (inviteError) inviteError.textContent = window.I18N ? window.I18N.t('mp_err_name_required') : '⚠️ Please enter your name! Cannot join without a name.';
             if (inviteInput) {
               inviteInput.focus();
               inviteInput.classList.add('input-error-shake');
@@ -5242,27 +5447,34 @@ class WormArenaGame {
       if (waitingRoomContent) waitingRoomContent.classList.remove('hidden');
 
       if (waitingRoomCodeVal) waitingRoomCodeVal.textContent = cleanCode;
-      if (waitingStatusText) waitingStatusText.textContent = 'Oda sahibine bağlanılıyor...';
-      if (waitingOwnerNotice) waitingOwnerNotice.textContent = 'Oda sahibi aranıyor, lütfen bekleyin...';
+      if (waitingStatusText) waitingStatusText.textContent = window.I18N ? window.I18N.t('mp_connecting_to_host') : 'Connecting to room host...';
+      if (waitingOwnerNotice) waitingOwnerNotice.textContent = window.I18N ? window.I18N.t('mp_searching_host') : 'Searching for host, please wait...';
+
+      const hostNameText = window.I18N ? window.I18N.t('mp_waiting_host_name') : 'Room Host';
+      const leaderBadge = window.I18N ? window.I18N.t('mp_badge_leader') : 'LEADER';
+      const youText = window.I18N ? window.I18N.t('you') : 'You';
+      const connectingBadge = window.I18N ? window.I18N.t('mp_badge_connecting') : 'CONNECTING';
 
       if (clientLobbyList) {
         clientLobbyList.innerHTML = `
           <li class="lobby-item is-host">
             <span class="lobby-player-icon">👑</span>
-            <span class="lobby-player-name">Oda Sahibi</span>
-            <span class="lobby-ready-badge leader">LİDER</span>
+            <span class="lobby-player-name">${hostNameText}</span>
+            <span class="lobby-ready-badge leader">${leaderBadge}</span>
           </li>
           <li class="lobby-item">
             <span class="lobby-player-icon">🟢</span>
-            <span class="lobby-player-name">${this.escapeHtml(playerName)} (Sen)</span>
-            <span class="lobby-ready-badge" id="myLobbyBadge">BAĞLANIYOR</span>
+            <span class="lobby-player-name">${this.escapeHtml(playerName)} (${youText})</span>
+            <span class="lobby-ready-badge" id="myLobbyBadge">${connectingBadge}</span>
           </li>
         `;
       }
       if (clientLobbyCount) clientLobbyCount.textContent = '2';
 
       if (window.showInGameAlert) {
-        window.showInGameAlert(`${cleanCode} numaralı odaya bağlanılıyor...`, 'info', '🎮 ODAYA KATIL');
+        const title = window.I18N ? window.I18N.t('alert_connecting_room_title') : '🎮 JOINING ROOM';
+        const msg = window.I18N ? window.I18N.t('alert_connecting_room_msg', { code: cleanCode }) : `Connecting to room #${cleanCode}...`;
+        window.showInGameAlert(msg, 'info', title);
       }
 
       if (this.network.isHost) {

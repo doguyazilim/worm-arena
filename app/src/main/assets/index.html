@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -7,7 +7,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Worm Arena">
-  <title>Worm Arena - Solucan & Yılan Savaşı</title>
+  <title>Worm Arena - Snake & Worm Battle</title>
 
   <link rel="icon" type="image/jpeg" href="icon.jpg">
   <link rel="apple-touch-icon" href="icon.jpg">
@@ -19,7 +19,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700;900&family=Outfit:wght@500;700;900&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="style.css">
-  <!-- WebRTC Çok Oyunculu Kütüphanesi (Yerel Dosya + Güvenli CDN Yedeği) -->
+  <!-- WebRTC Multiplayer Library (Local File + Safe CDN Fallback) -->
   <script src="peerjs.min.js"></script>
   <script>
     if (typeof Peer === 'undefined') {
@@ -31,7 +31,7 @@
   </script>
 </head>
 <body>
-  <!-- ==================== 🌈 SEVİMLİ VE RENKLİ AÇILIŞ / SPLASH EKRANI ==================== -->
+  <!-- ==================== 🌈 CUTE & VIBRANT SPLASH SCREEN ==================== -->
   <div class="splash-screen-overlay" id="splashScreen">
     <div class="splash-particles" aria-hidden="true">
       <span class="splash-bubble sp1">🍬</span>
@@ -53,68 +53,68 @@
         <div class="splash-logo-sparkle">✨</div>
       </div>
 
-      <h1 class="splash-title">WORM ARENA</h1>
-      <p class="splash-subtitle">✨ Renkli Solucanlar Dünyası! 🍭</p>
+      <h1 class="splash-title" data-i18n="splash_title">WORM ARENA</h1>
+      <p class="splash-subtitle" data-i18n="splash_subtitle">✨ Colorful Worms World! 🍭</p>
 
       <div class="splash-loader-wrap">
         <div class="splash-loader-track">
           <div class="splash-loader-bar" id="splashLoaderBar"></div>
         </div>
-        <p class="splash-status-text" id="splashStatusText">🍬 Renkli şekerler toplanıyor...</p>
+        <p class="splash-status-text" id="splashStatusText" data-i18n="splash_loading_status">🍬 Collecting sweet treats...</p>
       </div>
     </div>
   </div>
 
   <div class="game-container" id="gameContainer">
-    <!-- Ana Oyun Çizim Canvası -->
+    <!-- Main Game Canvas -->
     <canvas id="arenaCanvas"></canvas>
 
-    <!-- Oyun İçi Canlı Renkli Bildirim & Uyarı Kutusu -->
+    <!-- In-Game Live Notification & Toast Box -->
     <div class="game-toast-container" id="gameToastContainer">
       <div class="game-toast-card hidden" id="gameToastCard">
         <div class="toast-glow-effect" id="toastGlow"></div>
         <div class="toast-icon-wrapper" id="toastIcon">🎉</div>
         <div class="toast-content">
-          <div class="toast-title" id="toastTitle">TEBRİKLER!</div>
-          <div class="toast-msg" id="toastMsg">Seviye 4 oldun! +100 Altın Kazandın!</div>
+          <div class="toast-title" id="toastTitle" data-i18n="toast_congrats">CONGRATULATIONS!</div>
+          <div class="toast-msg" id="toastMsg" data-i18n="toast_levelup">Reached Level 4! +100 Coins Earned!</div>
         </div>
-        <button class="toast-dismiss-btn" id="toastDismissBtn" aria-label="Kapat">✕</button>
+        <button class="toast-dismiss-btn" id="toastDismissBtn" aria-label="Close">✕</button>
       </div>
     </div>
 
-    <!-- Arenada Canlı Olay Bildirimi -->
+    <!-- Live Event Banner in Arena -->
     <div class="event-banner hidden" id="eventBanner">
       <span class="event-icon" id="eventIcon">🌧️</span>
-      <span class="event-text" id="eventText">MERKEZDE ALTIN YAĞMURU BAŞLADI!</span>
+      <span class="event-text" id="eventText" data-i18n="event_gold_rain">A HUGE GOLD RAIN HAS STARTED IN THE CENTER!</span>
     </div>
 
-    <!-- Üst Skor / HUD Paneli -->
+    <!-- Top HUD Panel -->
     <header class="hud-top">
-      <!-- Canlı Liderlik Tablosu (Sol Üst) -->
+      <!-- Live Leaderboard (Top Left) -->
       <div class="leaderboard-card" id="leaderboardCard">
         <div class="leaderboard-header">
           <span class="trophy-icon">🏆</span>
-          <span class="leaderboard-title">LİDERLİK</span>
+          <span class="leaderboard-title" data-i18n="hud_leaderboard">LEADERBOARD</span>
         </div>
         <ol class="leaderboard-list" id="leaderboardList">
-          <!-- JS ile doldurulur -->
+          <!-- Filled by JS -->
         </ol>
       </div>
 
-      <!-- Sağ Taraf: Üstte Hızlı Kontroller, Altında Kompakt İstatistikler -->
+      <!-- Right Cluster: Quick Controls & Compact Stats -->
       <div class="hud-right-cluster">
-        <!-- Hızlı Kontroller (En Sağ Üst - Her Zaman Görünür) -->
+        <!-- Quick Actions (Top Right - Always Visible) -->
         <div class="quick-actions">
-          <button id="soundBtn" class="hud-btn" title="Ses">
+          <button id="soundBtn" class="hud-btn" title="Sound" data-i18n-title="hud_sound_title">
             <svg id="soundIconOn" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
             <svg id="soundIconOff" class="hidden" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>
           </button>
-          <button id="exitGameBtn" class="hud-btn hud-exit-btn" title="Ana Menüye Dön">
+          <button id="exitGameBtn" class="hud-btn hud-exit-btn" title="Return to Main Menu" data-i18n-title="hud_exit_title">
             ✕
           </button>
         </div>
 
-        <!-- Oyuncu Durumu (Kompakt ve Ekrana Sığan) -->
+        <!-- Player Stats (Compact) -->
         <div class="player-stats-card">
           <div class="stat-pill room-badge hidden" id="hudRoomBadge">
             <span class="stat-icon">👥</span>
@@ -122,7 +122,7 @@
           </div>
           <div class="stat-pill powerup-active-pill hidden" id="hudPowerupBadge">
             <span class="stat-icon" id="hudPowerupIcon">🧲</span>
-            <span class="stat-text" id="hudPowerupText">MIKNATIS</span>
+            <span class="stat-text" id="hudPowerupText" data-i18n="hud_powerup_magnet">MAGNET</span>
           </div>
           <div class="stat-pill">
             <span class="stat-icon">👑</span>
@@ -140,13 +140,13 @@
       </div>
     </header>
 
-    <!-- Radar / Mini Harita (Satranç Tahtası Sektörleri) -->
-    <div class="minimap-container" title="Satranç Tahtası Radar">
+    <!-- Radar / Mini Map -->
+    <div class="minimap-container" title="Radar">
       <canvas id="minimapCanvas" width="128" height="128"></canvas>
       <div class="minimap-label" id="minimapCoordBadge">📍 D4</div>
     </div>
 
-    <!-- Hızlı Canlı Emoji Çubuğu -->
+    <!-- Live In-Game Emote Bar -->
     <div class="in-game-emotes" id="inGameEmotes">
       <button class="emote-bubble-btn" data-emote="😂">😂</button>
       <button class="emote-bubble-btn" data-emote="👑">👑</button>
@@ -156,31 +156,31 @@
       <button class="emote-bubble-btn" data-emote="👻">👻</button>
     </div>
 
-    <!-- Mobil Dokunmatik Turbo Hızlanma Butonu (Tek Dokunuş & Dairesel Süre Göstergesi) -->
+    <!-- Mobile Boost Turbo Button -->
     <div class="boost-control-container">
       <div class="boost-gauge-wrap">
         <svg class="boost-gauge-svg" viewBox="0 0 96 96">
           <circle class="boost-gauge-bg" cx="48" cy="48" r="41" />
           <circle class="boost-gauge-bar" id="boostGaugeBar" cx="48" cy="48" r="41" />
         </svg>
-        <button class="boost-btn" id="boostBtn" aria-label="Turbo Hız">
+        <button class="boost-btn" id="boostBtn" aria-label="Turbo Boost">
           <div class="boost-glow"></div>
           <span class="boost-icon">⚡</span>
-          <span class="boost-text" id="boostBtnText">HIZLAN</span>
+          <span class="boost-text" id="boostBtnText" data-i18n="hud_btn_boost">BOOST</span>
         </button>
       </div>
     </div>
 
-    <!-- Mobil Sanal Joystick (Oyun başladığında açılır, menüde gizlenir) -->
+    <!-- Mobile Virtual Joystick -->
     <div class="virtual-joystick-zone hidden" id="joystickZone">
       <div class="joystick-base hidden" id="joystickBase">
         <div class="joystick-thumb" id="joystickThumb"></div>
       </div>
     </div>
 
-    <!-- ==================== TAM EKRAN RENKLİ ÇOCUK DOSTU ANA MENÜ ==================== -->
+    <!-- ==================== FULLSCREEN VIBRANT MAIN MENU ==================== -->
     <div class="fullscreen-menu-overlay" id="startScreen">
-      <!-- Arka Plan Uçuşan Renkli Şeker ve Yıldızlar -->
+      <!-- Floating Colorful Candies & Stars -->
       <div class="menu-decorations" aria-hidden="true">
         <span class="menu-float-item mf1">🍭</span>
         <span class="menu-float-item mf2">⭐</span>
@@ -192,7 +192,7 @@
       </div>
 
       <div class="menu-content-wrapper">
-        <!-- 1. ÜST BÖLÜM: Para, Rozet, Seviye & Ses -->
+        <!-- 1. TOP SECTION: Coins, Level, Sound & Settings -->
         <div class="menu-header-group">
           <div class="menu-top-bar">
             <div class="currency-pill">
@@ -204,41 +204,41 @@
               <span class="level-text">Lv.<b id="menuLevelText">1</b></span>
               <div class="xp-mini-bar"><div class="xp-mini-fill" id="menuXpFill" style="width: 25%"></div></div>
             </div>
-            <button class="menu-sound-btn" id="menuSoundBtn" title="Ses Aç/Kapat">🔊</button>
-            <button class="menu-settings-btn" id="openSettingsBtn" title="Ayarlar">⚙️</button>
+            <button class="menu-sound-btn" id="menuSoundBtn" title="Toggle Sound" data-i18n-title="menu_sound_btn_title">🔊</button>
+            <button class="menu-settings-btn" id="openSettingsBtn" title="Settings" data-i18n-title="menu_settings_btn_title">⚙️</button>
           </div>
 
           <div class="menu-logo-banner">
             <div class="menu-logo-wrapper">
               <div class="menu-logo-halo"></div>
               <img src="icon.jpg" alt="Logo" class="menu-logo-img">
-              <span class="menu-logo-badge">👑 EFSANE</span>
+              <span class="menu-logo-badge" data-i18n="menu_legend_badge">👑 LEGEND</span>
             </div>
-            <h1 class="menu-title">WORM ARENA</h1>
-            <p class="menu-subtitle">🌈 Renkli Solucanlar Savaşı! 🍭</p>
+            <h1 class="menu-title" data-i18n="menu_title">WORM ARENA</h1>
+            <p class="menu-subtitle" data-i18n="menu_subtitle">🌈 Colorful Worms Battle! 🍭</p>
           </div>
         </div>
 
-        <!-- 2. ORTA BÖLÜM: Kısayollar, Yılan Önizleme & İsim -->
+        <!-- 2. CENTER SECTION: Shortcuts, Snake Preview & Name -->
         <div class="menu-center-group">
           <div class="feature-shortcuts">
             <button class="shortcut-btn gold-border" id="openWheelBtn">
               <span class="shortcut-icon">🎡</span>
-              <span class="shortcut-label">Şans Çarkı</span>
-              <span class="badge-dot">Ücretsiz</span>
+              <span class="shortcut-label" data-i18n="menu_shortcut_wheel">Fortune Wheel</span>
+              <span class="badge-dot" data-i18n="menu_shortcut_wheel_badge">Free</span>
             </button>
             <button class="shortcut-btn cyan-border" id="openShopBtn">
               <span class="shortcut-icon">🛒</span>
-              <span class="shortcut-label">Mağaza</span>
+              <span class="shortcut-label" data-i18n="menu_shortcut_shop">Shop</span>
             </button>
             <button class="shortcut-btn pink-border" id="openQuestsBtn">
               <span class="shortcut-icon">📜</span>
-              <span class="shortcut-label">Görevler</span>
-              <span class="badge-dot" id="questNotification">Yeni</span>
+              <span class="shortcut-label" data-i18n="menu_shortcut_quests">Quests</span>
+              <span class="badge-dot" id="questNotification" data-i18n="menu_shortcut_quests_badge">New</span>
             </button>
             <button class="shortcut-btn purple-border" id="openSettingsShortcutBtn">
               <span class="shortcut-icon">⚙️</span>
-              <span class="shortcut-label">Ayarlar</span>
+              <span class="shortcut-label" data-i18n="menu_shortcut_settings">Settings</span>
             </button>
           </div>
 
@@ -246,230 +246,230 @@
             <canvas id="skinPreviewCanvas" width="360" height="130"></canvas>
             <div class="skin-lock-overlay hidden" id="skinLockOverlay">
               <span class="lock-icon">🔒</span>
-              <span class="lock-text" id="skinLockText">Seviye 3'te Açılır</span>
+              <span class="lock-text" id="skinLockText">Unlocks at Level 3</span>
             </div>
             <div class="skin-selector">
               <button class="skin-arrow" id="prevSkinBtn">❮</button>
               <div class="skin-info-wrap">
-                <span class="skin-name" id="skinName">Kutsal Ak Ejder</span>
-                <span class="hat-name" id="activeHatName">Baş Kostümü: Orijinal</span>
+                <span class="skin-name" id="skinName">Holy White Dragon</span>
+                <span class="hat-name" id="activeHatName">Head Costume: Original</span>
               </div>
               <button class="skin-arrow" id="nextSkinBtn">❯</button>
             </div>
           </div>
 
           <div class="input-group">
-            <input type="text" id="playerNameInput" maxlength="14" value="" placeholder="✍️ Süper Yılan Adın..." class="player-name-input" autocomplete="off">
+            <input type="text" id="playerNameInput" maxlength="14" value="" placeholder="✍️ Super Snake Name..." data-i18n-placeholder="menu_name_placeholder" class="player-name-input" autocomplete="off">
           </div>
         </div>
 
-        <!-- 3. ALT BÖLÜM: Başlat Butonları & İpucu -->
+        <!-- 3. BOTTOM SECTION: Play Buttons & Tip -->
         <div class="menu-bottom-group">
           <div class="main-action-buttons">
             <button class="play-btn-large glow-pulse" id="startGameBtn">
-              <span>🎮 OYNA ▶</span>
+              <span data-i18n="menu_play_btn">🎮 PLAY ▶</span>
             </button>
 
             <button class="room-btn-secondary" id="openFriendsRoomBtn">
               <span class="room-btn-icon">👥</span>
-              <span>Arkadaşlarla Oyna (Oda)</span>
+              <span data-i18n="menu_friends_btn">Play with Friends (Room)</span>
             </button>
           </div>
 
           <div class="mobile-tip">
-            <span class="tip-badge">İPUCU</span>
-            <span>Arenadaki 🧲 Mıknatısları toplayarak çevrendeki tüm altınları vakumla!</span>
+            <span class="tip-badge" data-i18n="menu_tip_badge">TIP</span>
+            <span data-i18n="menu_tip_text">Collect 🧲 Magnets in the arena to vacuum all surrounding gold!</span>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- ==================== 👥 ARKADAŞLARLA ODA MODU MODALI (PENCERE) ==================== -->
+    <!-- ==================== 👥 PLAY WITH FRIENDS MODAL ==================== -->
     <div class="modal-backdrop hidden" id="multiplayerModal">
       <div class="modal-dialog multiplayer-dialog">
         <div class="modal-header">
           <div class="modal-title-wrap">
             <span class="modal-icon">👥</span>
-            <h2 class="modal-title">ARKADAŞLARLA OYNA</h2>
+            <h2 class="modal-title" data-i18n="mp_modal_title">PLAY WITH FRIENDS</h2>
           </div>
           <button class="close-modal-btn" id="closeMultiplayerBtn">✕</button>
         </div>
-        <p class="modal-desc" id="multiplayerModalDesc">Arkadaşlarınla aynı arenada toplan ve aynı anda savaşa başla!</p>
+        <p class="modal-desc" id="multiplayerModalDesc" data-i18n="mp_modal_desc">Gather with friends in the same arena and start the battle together!</p>
 
         <div class="room-tabs" id="roomTabsBar">
-          <button class="room-tab-btn active" id="tabCreateRoom">👑 Oda Kur</button>
-          <button class="room-tab-btn" id="tabJoinRoom">🎮 Odaya Katıl</button>
+          <button class="room-tab-btn active" id="tabCreateRoom" data-i18n="mp_tab_create">👑 Create Room</button>
+          <button class="room-tab-btn" id="tabJoinRoom" data-i18n="mp_tab_join">🎮 Join Room</button>
         </div>
 
-        <!-- 1. ODA KURMA BÖLÜMÜ (HOST) -->
+        <!-- 1. CREATE ROOM SECTION (HOST) -->
         <div id="createRoomTabContent" class="room-tab-content">
           <div class="room-code-display">
-            <span class="code-label">SENİN 4 HANELİ ODA KODUN:</span>
+            <span class="code-label" data-i18n="mp_code_label">YOUR 4-DIGIT ROOM CODE:</span>
             <div class="code-val-box">
-              <span class="code-number" id="myRoomCode">Yükleniyor...</span>
-              <button class="copy-code-btn" id="copyCodeBtn" title="Kodu Kopyala">📋 Kodu Kopyala</button>
+              <span class="code-number" id="myRoomCode" data-i18n="mp_code_loading">Loading...</span>
+              <button class="copy-code-btn" id="copyCodeBtn" title="Copy Code" data-i18n="mp_copy_code_btn">📋 Copy Code</button>
             </div>
           </div>
 
-          <!-- Doğrudan Web Katılım Linki Bölümü -->
+          <!-- Direct Web Invite Link -->
           <div class="room-link-box">
-            <span class="link-label">🔗 ARKADAŞINA GÖNDERECEĞİN WEB LİNKİ:</span>
+            <span class="link-label" data-i18n="mp_link_label">🔗 WEB LINK TO SHARE WITH FRIENDS:</span>
             <div class="link-input-row">
-              <input type="text" id="roomLinkInput" readonly class="room-link-field" value="Link oluşturuluyor..." placeholder="Oda linki hazırlanıyor...">
-              <button class="copy-link-btn" id="copyRoomLinkBtn" title="Linki Paylaş">📤 Paylaş</button>
+              <input type="text" id="roomLinkInput" readonly class="room-link-field" value="Generating link..." placeholder="Preparing room link..." data-i18n-placeholder="mp_link_placeholder">
+              <button class="copy-link-btn" id="copyRoomLinkBtn" title="Share Link" data-i18n="mp_share_btn">📤 Share</button>
             </div>
-            <p class="code-tip">✨ Arkadaşların bu linke tıkladığında doğrudan tarayıcıdan odana katılır ve beklemeye geçer!</p>
+            <p class="code-tip" data-i18n="mp_code_tip">✨ When your friends click this link, they will join your room directly from the browser!</p>
           </div>
 
-          <!-- Canlı Lobi Oyuncu Listesi (Host Görünümü: Hazır Olanlar Listesi) -->
+          <!-- Live Lobby Player List (Host View) -->
           <div class="lobby-players-box">
             <div class="lobby-header-row">
-              <span class="lobby-title">👥 Hazır Olan Oyuncular (<span id="lobbyCount">1</span>):</span>
-              <span class="lobby-live-badge" id="lobbyStatusBadge">🟢 Lobi Aktif</span>
+              <span class="lobby-title">👥 <span data-i18n="mp_lobby_title">Ready Players</span> (<span id="lobbyCount">1</span>):</span>
+              <span class="lobby-live-badge" id="lobbyStatusBadge" data-i18n="mp_lobby_status_active">🟢 Lobby Active</span>
             </div>
             <ul class="lobby-list" id="lobbyList">
               <li class="lobby-item is-host">
                 <span class="lobby-player-icon">👑</span>
-                <span class="lobby-player-name" id="hostPlayerNameLobby">Sen (Oda Sahibi)</span>
-                <span class="lobby-ready-badge leader">LİDER</span>
+                <span class="lobby-player-name" id="hostPlayerNameLobby" data-i18n="mp_lobby_host_name">You (Room Host)</span>
+                <span class="lobby-ready-badge leader" data-i18n="mp_badge_leader">LEADER</span>
               </li>
             </ul>
           </div>
 
           <div class="room-option-row">
-            <label class="option-label" for="botsInRoomToggle">Arenada Botlar da Olsun</label>
+            <label class="option-label" for="botsInRoomToggle" data-i18n="mp_bots_toggle">Include Bots in Arena</label>
             <input type="checkbox" id="botsInRoomToggle" class="modern-toggle">
           </div>
 
           <button class="play-btn-large glow-pulse" id="startRoomGameBtn">
-            <span id="startRoomGameBtnText">OYUNU BAŞLAT 🚀</span>
+            <span id="startRoomGameBtnText" data-i18n="mp_start_btn">START GAME 🚀</span>
           </button>
-          <p class="lobby-host-hint">💡 'Oyunu Başlat' butonuna bastığında odadaki bütün oyuncular aynı anda oyuna başlayacaktır.</p>
+          <p class="lobby-host-hint" data-i18n="mp_host_hint">💡 When you click 'Start Game', all players in the room will begin the game simultaneously.</p>
         </div>
 
-        <!-- 2. ODAYA KATILMA BÖLÜMÜ -->
+        <!-- 2. JOIN ROOM SECTION -->
         <div id="joinRoomTabContent" class="room-tab-content hidden">
           <div class="join-input-group">
-            <label class="join-label" for="joinPlayerNameInput">👤 Oyuncu Adın:</label>
-            <input type="text" id="joinPlayerNameInput" maxlength="14" placeholder="Adını yaz (Örn: Kaplan_TR)" class="join-code-input" style="font-size: 1.15rem; letter-spacing: 1px; font-weight: 700; color: #00ffcc; text-transform: none; margin-bottom: 14px; text-align: left; padding: 12px 16px;">
+            <label class="join-label" for="joinPlayerNameInput" data-i18n="mp_join_name_label">👤 Your Player Name:</label>
+            <input type="text" id="joinPlayerNameInput" maxlength="14" placeholder="Enter your name (e.g. Shadow_X)" data-i18n-placeholder="mp_join_name_placeholder" class="join-code-input" style="font-size: 1.15rem; letter-spacing: 1px; font-weight: 700; color: #00ffcc; text-transform: none; margin-bottom: 14px; text-align: left; padding: 12px 16px;">
 
-            <label class="join-label" for="joinRoomCodeInput">🔢 4 Haneli Oda Kodunu Gir:</label>
-            <input type="text" id="joinRoomCodeInput" maxlength="6" placeholder="Örn: 7842" class="join-code-input">
+            <label class="join-label" for="joinRoomCodeInput" data-i18n="mp_join_code_label">🔢 Enter 4-Digit Room Code:</label>
+            <input type="text" id="joinRoomCodeInput" maxlength="6" placeholder="e.g. 7842" data-i18n-placeholder="mp_join_code_placeholder" class="join-code-input">
             <p class="join-status-msg" id="joinStatusMsg"></p>
           </div>
 
           <button class="play-btn-large glow-pulse" id="joinRoomSubmitBtn">
-            <span>ODAYA BAĞLAN & OYNA 🎮</span>
+            <span data-i18n="mp_join_submit_btn">JOIN ROOM & PLAY 🎮</span>
           </button>
-          <p class="code-tip" style="margin-top: 10px; text-align: center;">⏳ Odaya bağlandığında bekleme odasında arkadaşların listelenecek ve oda sahibi arenayı başlattığında oyun otomatik olarak başlayacaktır.</p>
+          <p class="code-tip" style="margin-top: 10px; text-align: center;" data-i18n="mp_join_tip">⏳ Once connected, your friends will be listed in the waiting room and the game will start automatically when the host launches the arena.</p>
         </div>
 
-        <!-- 3. KATILAN ARKADAŞ İÇİN BEKLEME ODASI (CLIENT LOBİSİ) -->
+        <!-- 3. WAITING ROOM (CLIENT LOBBY) -->
         <div id="waitingRoomTabContent" class="room-tab-content hidden">
           <div class="waiting-card">
             <div class="waiting-card-glow"></div>
             <div class="waiting-spinner-ring"></div>
             <div class="waiting-room-meta">
-              <span class="waiting-room-label">ODA KODU</span>
+              <span class="waiting-room-label" data-i18n="mp_waiting_room_label">ROOM CODE</span>
               <span class="waiting-room-code" id="waitingRoomCodeVal">----</span>
             </div>
             <div class="waiting-pulse-banner">
               <span class="waiting-pulse-dot"></span>
-              <span id="waitingStatusText">Oda sahibi henüz oyunu başlatmadı. Lütfen bekleyin...</span>
+              <span id="waitingStatusText" data-i18n="mp_waiting_status_text">Host hasn't started the game yet. Please wait...</span>
             </div>
           </div>
 
           <div class="lobby-players-box">
             <div class="lobby-header-row">
-              <span class="lobby-title">👥 Odadaki Oyuncular (<span id="clientLobbyCount">1</span>):</span>
-              <span class="lobby-live-badge waiting">⏳ Başlama Bekleniyor</span>
+              <span class="lobby-title">👥 <span data-i18n="mp_lobby_title">Players in Room</span> (<span id="clientLobbyCount">1</span>):</span>
+              <span class="lobby-live-badge waiting" data-i18n="mp_waiting_badge">⏳ Waiting to Start</span>
             </div>
             <ul class="lobby-list" id="clientLobbyList">
               <li class="lobby-item is-host">
                 <span class="lobby-player-icon">👑</span>
-                <span class="lobby-player-name" id="waitingHostName">Oda Sahibi</span>
-                <span class="lobby-ready-badge leader">LİDER</span>
+                <span class="lobby-player-name" id="waitingHostName" data-i18n="mp_waiting_host_name">Room Host</span>
+                <span class="lobby-ready-badge leader" data-i18n="mp_badge_leader">LEADER</span>
               </li>
             </ul>
           </div>
 
           <div class="waiting-loading-banner">
             <div class="waiting-spinner-small"></div>
-            <span class="waiting-loading-msg" id="waitingOwnerNotice">Oda sahibi henüz oyunu başlatmadı. Lütfen bekleyin...</span>
+            <span class="waiting-loading-msg" id="waitingOwnerNotice" data-i18n="mp_waiting_owner_notice">Host hasn't started the game yet. Please wait...</span>
           </div>
 
           <div class="waiting-notice-box">
             <span class="waiting-notice-icon">🎮</span>
-            <span class="waiting-notice-text">Oda sahibi "Oyunu Başlat" butonuna bastığı an oyununuz otomatik olarak başlayacaktır. Lütfen ayrılmadan bekleyin!</span>
+            <span class="waiting-notice-text" data-i18n="mp_waiting_notice_text">Your game will begin automatically as soon as the host clicks 'Start Game'. Please wait without leaving!</span>
           </div>
 
           <button class="play-btn-large glow-pulse hidden" id="clientRetryJoinBtn" style="margin-bottom: 10px;">
-            <span>🔄 TEKRAR BAĞLAN</span>
+            <span data-i18n="mp_retry_btn">🔄 RECONNECT</span>
           </button>
 
           <button class="room-btn-danger" id="clientLeaveRoomBtn">
-            <span>🚪 Odadan Ayrıl</span>
+            <span data-i18n="mp_leave_btn">🚪 Leave Room</span>
           </button>
         </div>
       </div>
     </div>
 
-    <!-- ==================== 📩 ODA DAVETİ: ZORUNLU İSİM GİRME MODALI ==================== -->
+    <!-- ==================== 📩 ROOM INVITE: NAME ENTRY MODAL ==================== -->
     <div class="modal-backdrop hidden" id="inviteNameModal">
       <div class="modal-dialog invite-name-dialog" style="max-width: 440px; text-align: center;">
         <div class="modal-header" style="justify-content: center;">
-          <h2 class="modal-title">🎮 ODAYA DAVET EDİLDİN</h2>
+          <h2 class="modal-title" data-i18n="invite_modal_title">🎮 YOU'VE BEEN INVITED TO A ROOM</h2>
         </div>
 
         <div style="margin: 14px 0 10px;">
-          <div style="font-size: 0.9rem; color: #8899aa; margin-bottom: 6px; font-weight: 600;">Katılacağın Oda Kodu:</div>
+          <div style="font-size: 0.9rem; color: #8899aa; margin-bottom: 6px; font-weight: 600;" data-i18n="invite_room_label">Room Code:</div>
           <div class="invite-room-code-badge" id="inviteModalRoomBadge" style="display: inline-block; font-size: 1.8rem; font-weight: 800; color: #00ffcc; letter-spacing: 4px; background: rgba(0,255,204,0.12); border: 1.5px solid rgba(0,255,204,0.4); padding: 6px 24px; border-radius: 14px; text-shadow: 0 0 12px rgba(0,255,204,0.5);">----</div>
         </div>
 
-        <p style="color: #cbd5e1; font-size: 0.96rem; margin-bottom: 16px; line-height: 1.4;">
-          Arkadaşlarının seni oyunda ve lobide görebilmesi için <strong>lütfen adını gir</strong>:
+        <p data-i18n-html="invite_desc" style="color: #cbd5e1; font-size: 0.96rem; margin-bottom: 16px; line-height: 1.4;">
+          Please <strong>enter your name</strong> so your friends can see you in the game and lobby:
         </p>
 
         <div style="margin-bottom: 16px; text-align: left;">
-          <label for="invitePlayerNameInput" style="display: block; font-size: 0.85rem; color: #00ffcc; font-weight: 700; margin-bottom: 6px;">👤 OYUNCU ADIN (Zorunlu):</label>
-          <input type="text" id="invitePlayerNameInput" maxlength="14" placeholder="Adını buraya yaz..." autocomplete="off" style="width: 100%; box-sizing: border-box; padding: 14px 16px; font-size: 1.15rem; font-weight: 700; color: #ffffff; background: rgba(10, 18, 32, 0.95); border: 2px solid #00ffcc; border-radius: 12px; outline: none; transition: all 0.2s ease; box-shadow: 0 0 15px rgba(0,255,204,0.18);">
+          <label for="invitePlayerNameInput" data-i18n="invite_name_label" style="display: block; font-size: 0.85rem; color: #00ffcc; font-weight: 700; margin-bottom: 6px;">👤 PLAYER NAME (Required):</label>
+          <input type="text" id="invitePlayerNameInput" maxlength="14" placeholder="Type your name here..." data-i18n-placeholder="invite_name_placeholder" autocomplete="off" style="width: 100%; box-sizing: border-box; padding: 14px 16px; font-size: 1.15rem; font-weight: 700; color: #ffffff; background: rgba(10, 18, 32, 0.95); border: 2px solid #00ffcc; border-radius: 12px; outline: none; transition: all 0.2s ease; box-shadow: 0 0 15px rgba(0,255,204,0.18);">
           <p id="inviteNameErrorMsg" style="color: #ff4757; font-size: 0.88rem; font-weight: 600; margin-top: 6px; min-height: 20px;"></p>
         </div>
 
         <button class="play-btn-large glow-pulse" id="inviteJoinSubmitBtn" style="width: 100%;">
-          <span>ODAYA KATIL 🚀</span>
+          <span data-i18n="invite_btn">JOIN ROOM 🚀</span>
         </button>
       </div>
     </div>
 
-    <!-- ==================== 🎡 ŞANS ÇARKI PENCERESİ ==================== -->
+    <!-- ==================== 🎡 DAILY FORTUNE WHEEL MODAL ==================== -->
     <div class="modal-backdrop hidden" id="wheelModal">
       <div class="modal-dialog">
         <div class="modal-header">
-          <h2 class="modal-title">🎡 GÜNLÜK ŞANS ÇARKI</h2>
+          <h2 class="modal-title" data-i18n="wheel_title">🎡 DAILY FORTUNE WHEEL</h2>
           <button class="close-modal-btn" id="closeWheelBtn">✕</button>
         </div>
-        <p class="modal-desc">Çarkı çevir, devasa altın ödülleri ve gizemli kostümleri kap!</p>
+        <p class="modal-desc" data-i18n="wheel_desc">Spin the wheel, grab huge coin rewards and mystery costumes!</p>
 
         <div class="wheel-container">
           <div class="wheel-pointer">▼</div>
           <canvas id="wheelCanvas" width="280" height="280"></canvas>
         </div>
 
-        <div class="wheel-result-msg hidden" id="wheelResultMsg">Tebrikler! 250 Altın Kazandın!</div>
+        <div class="wheel-result-msg hidden" id="wheelResultMsg">Congratulations! You won 250 Coins!</div>
 
         <button class="play-btn-large glow-pulse" id="spinWheelBtn">
-          <span>ŞANSINI DENE (ÜCRETSİZ)</span>
+          <span data-i18n="wheel_spin_btn">TRY YOUR LUCK (FREE)</span>
         </button>
       </div>
     </div>
 
-    <!-- ==================== 🛒 MAĞAZA PENCERESİ ==================== -->
+    <!-- ==================== 🛒 SHOP MODAL ==================== -->
     <div class="modal-backdrop hidden" id="shopModal">
       <div class="modal-dialog shop-dialog">
         <div class="modal-header">
           <div class="shop-title-wrap">
-            <h2 class="modal-title">🛒 MAĞAZA</h2>
+            <h2 class="modal-title" data-i18n="shop_title">🛒 SHOP</h2>
             <div class="currency-pill">
               <span class="coin-icon">🪙</span>
               <span class="coin-count" id="shopCoinCount">0</span>
@@ -479,70 +479,85 @@
         </div>
 
         <div class="shop-tabs">
-          <button class="shop-tab-btn active" id="tabShopHats">👑 Şapkalar</button>
-          <button class="shop-tab-btn" id="tabShopSkins">🎨 Kostümler</button>
+          <button class="shop-tab-btn active" id="tabShopHats" data-i18n="shop_tab_hats">👑 Hats</button>
+          <button class="shop-tab-btn" id="tabShopSkins" data-i18n="shop_tab_skins">🎨 Skins</button>
         </div>
 
         <div class="shop-grid" id="hatsGrid">
-          <!-- JS ile doldurulur -->
+          <!-- Populated by JS -->
         </div>
 
         <div class="shop-grid hidden" id="skinsGrid">
-          <!-- JS ile doldurulur -->
+          <!-- Populated by JS -->
         </div>
       </div>
     </div>
 
-    <!-- ==================== 📜 GÖREVLER & GÜNLÜK ÖDÜLLER PENCERESİ ==================== -->
+    <!-- ==================== 📜 QUESTS & DAILY REWARDS MODAL ==================== -->
     <div class="modal-backdrop hidden" id="questsModal">
       <div class="modal-dialog quests-dialog">
         <div class="modal-header">
-          <h2 class="modal-title">📜 GÖREVLER & ÖDÜLLER</h2>
+          <h2 class="modal-title" data-i18n="quests_modal_title">📜 QUESTS & REWARDS</h2>
           <button class="close-modal-btn" id="closeQuestsBtn">✕</button>
         </div>
 
-        <!-- Uzun Vadeli Sadakat & Aşama Yolculuğu (7, 15, 30, 60, 90, 120+ Günler) -->
+        <!-- Loyalty & Milestones Journey (7, 15, 30, 60, 90, 120+ Days) -->
         <div class="daily-streak-card">
           <div class="streak-header-info">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; margin-bottom: 4px;">
-              <span class="streak-title" style="margin-bottom: 0;">🎁 GÜNLÜK SADAKAT & EFSANEVİ ÖDÜL YOLCULUĞU</span>
-              <span class="streak-badge" id="streakLoginCountBadge" style="font-size: 0.72rem; font-weight: 800; color: #00ffcc; background: rgba(0,255,204,0.12); border: 1px solid rgba(0,255,204,0.3); padding: 3px 10px; border-radius: 8px;">📅 Giriş: 1. Gün</span>
+              <span class="streak-title" style="margin-bottom: 0;" data-i18n="streak_title">🎁 DAILY LOYALTY & LEGENDARY REWARD JOURNEY</span>
+              <span class="streak-badge" id="streakLoginCountBadge" style="font-size: 0.72rem; font-weight: 800; color: #00ffcc; background: rgba(0,255,204,0.12); border: 1px solid rgba(0,255,204,0.3); padding: 3px 10px; border-radius: 8px;">📅 Login: Day 1</span>
             </div>
-            <span class="streak-subtitle">Her gün arenada büyü ve günleri devir; 7, 15, 30, 60, 90, 120. günlerde devasa altınlar, efsanevi kostümler ve başlıklar kazan!</span>
+            <span class="streak-subtitle" data-i18n="streak_subtitle">Grow in the arena every day and pass the milestones; win massive coins, legendary skins, and headpieces on days 7, 15, 30, 60, 90, 120+!</span>
           </div>
           <div class="streak-days-row" id="streakDaysRow">
-            <!-- JS ile dinamik doldurulur -->
+            <!-- Populated dynamically by JS -->
           </div>
         </div>
 
         <div class="quests-list-box">
-          <span class="quests-header-label">Günlük Ekstra Görevler</span>
+          <span class="quests-header-label" data-i18n="quests_header">Daily Extra Quests</span>
           <div class="quests-list" id="questsList">
-            <!-- JS ile dinamik doldurulur -->
+            <!-- Populated dynamically by JS -->
           </div>
         </div>
       </div>
     </div>
 
-    <!-- ==================== ⚙️ OYUN AYARLARI PENCERESİ ==================== -->
+    <!-- ==================== ⚙️ GAME SETTINGS MODAL ==================== -->
     <div class="modal-backdrop hidden" id="settingsModal">
       <div class="modal-dialog settings-dialog">
         <div class="modal-header">
           <div class="settings-title-wrap">
             <span class="settings-title-icon">⚙️</span>
-            <h2 class="modal-title">OYUN AYARLARI</h2>
+            <h2 class="modal-title" data-i18n="settings_title">GAME SETTINGS</h2>
           </div>
           <button class="close-modal-btn" id="closeSettingsBtn">✕</button>
         </div>
 
         <div class="settings-scroll-area">
-          <!-- Bölüm 1: Ses & Müzik -->
-          <div class="settings-section-badge">🔊 SES & GERİ BİLDİRİM</div>
+          <!-- Section 0: Language / Dil -->
+          <div class="settings-section-badge" data-i18n="settings_sec_lang">🌐 LANGUAGE / DİL</div>
           <div class="settings-list">
             <div class="setting-item">
               <div class="setting-info">
-                <span class="setting-name">🔊 Ses Efektleri</span>
-                <span class="setting-desc">Yem, çarpışma ve turbo sesleri</span>
+                <span class="setting-name" data-i18n="settings_lang_name">🌐 Game Language</span>
+                <span class="setting-desc" data-i18n="settings_lang_desc">Choose English or Turkish / Dil seçin</span>
+              </div>
+              <select class="setting-select" id="settingLanguage">
+                <option value="en" data-i18n="settings_lang_opt_en">English (Default)</option>
+                <option value="tr" data-i18n="settings_lang_opt_tr">Türkçe</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Section 1: Sound & Feedback -->
+          <div class="settings-section-badge" data-i18n="settings_sec_sound">🔊 SOUND & FEEDBACK</div>
+          <div class="settings-list">
+            <div class="setting-item">
+              <div class="setting-info">
+                <span class="setting-name" data-i18n="settings_sfx_name">🔊 Sound Effects</span>
+                <span class="setting-desc" data-i18n="settings_sfx_desc">Food, collision, and boost sounds</span>
               </div>
               <label class="toggle-switch">
                 <input type="checkbox" id="settingSfx" checked>
@@ -552,8 +567,8 @@
 
             <div class="setting-item">
               <div class="setting-info">
-                <span class="setting-name">🎵 Fon Müziği</span>
-                <span class="setting-desc">Retro synthwave müzik</span>
+                <span class="setting-name" data-i18n="settings_music_name">🎵 Background Music</span>
+                <span class="setting-desc" data-i18n="settings_music_desc">Retro synthwave music</span>
               </div>
               <label class="toggle-switch">
                 <input type="checkbox" id="settingMusic" checked>
@@ -563,8 +578,8 @@
 
             <div class="setting-item">
               <div class="setting-info">
-                <span class="setting-name">📳 Titreşim (Haptik)</span>
-                <span class="setting-desc">Çarpışmalarda ve yemlerde titreşim</span>
+                <span class="setting-name" data-i18n="settings_vibrate_name">📳 Vibration (Haptic)</span>
+                <span class="setting-desc" data-i18n="settings_vibrate_desc">Vibration on collisions and foods</span>
               </div>
               <label class="toggle-switch">
                 <input type="checkbox" id="settingVibrate" checked>
@@ -573,40 +588,40 @@
             </div>
           </div>
 
-          <!-- Bölüm 2: Kontroller -->
-          <div class="settings-section-badge">🎮 KONTROLLER & OYNANIŞ</div>
+          <!-- Section 2: Controls & Gameplay -->
+          <div class="settings-section-badge" data-i18n="settings_sec_controls">🎮 CONTROLS & GAMEPLAY</div>
           <div class="settings-list">
             <div class="setting-item">
               <div class="setting-info">
-                <span class="setting-name">🕹️ Kontrol Tipi</span>
-                <span class="setting-desc">Yılanı nasıl yönlendirmek istersin?</span>
+                <span class="setting-name" data-i18n="settings_control_name">🕹️ Control Mode</span>
+                <span class="setting-desc" data-i18n="settings_control_desc">How would you like to steer the snake?</span>
               </div>
               <select class="setting-select" id="settingControlMode">
-                <option value="dynamic">Dinamik Joystick</option>
-                <option value="direct">Doğrudan Dokunma</option>
-                <option value="fixed">Sabit Analog Kol</option>
+                <option value="dynamic" data-i18n="settings_opt_ctrl_dynamic">Dynamic Joystick</option>
+                <option value="direct" data-i18n="settings_opt_ctrl_direct">Direct Touch / Follow</option>
+                <option value="fixed" data-i18n="settings_opt_ctrl_fixed">Fixed Analog Stick</option>
               </select>
             </div>
 
             <div class="setting-item">
               <div class="setting-info">
-                <span class="setting-name">🚀 Turbo Buton Konumu</span>
-                <span class="setting-desc">Hızlanma butonu yerleşimi</span>
+                <span class="setting-name" data-i18n="settings_boost_pos_name">🚀 Boost Button Placement</span>
+                <span class="setting-desc" data-i18n="settings_boost_pos_desc">Position of the turbo boost button</span>
               </div>
               <select class="setting-select" id="settingBoostPos">
-                <option value="right">Sağ Altta (Varsayılan)</option>
-                <option value="left">Sol Altta</option>
+                <option value="right" data-i18n="settings_opt_pos_right">Bottom Right (Default)</option>
+                <option value="left" data-i18n="settings_opt_pos_left">Bottom Left</option>
               </select>
             </div>
           </div>
 
-          <!-- Bölüm 3: Görünüm & Ekran -->
-          <div class="settings-section-badge">👁️ GÖRÜNÜM & PERFORMANS</div>
+          <!-- Section 3: Display & Performance -->
+          <div class="settings-section-badge" data-i18n="settings_sec_display">👁️ DISPLAY & PERFORMANCE</div>
           <div class="settings-list">
             <div class="setting-item">
               <div class="setting-info">
-                <span class="setting-name">🗺️ Mini Harita (Radar)</span>
-                <span class="setting-desc">Sağ alt köşede arena radarı</span>
+                <span class="setting-name" data-i18n="settings_minimap_name">🗺️ Mini-Map (Radar)</span>
+                <span class="setting-desc" data-i18n="settings_minimap_desc">Arena radar in bottom-right corner</span>
               </div>
               <label class="toggle-switch">
                 <input type="checkbox" id="settingMinimap" checked>
@@ -616,19 +631,19 @@
 
             <div class="setting-item">
               <div class="setting-info">
-                <span class="setting-name">🔍 Kamera Görüş Alanı</span>
-                <span class="setting-desc">Kuşbakışı görüş mesafesi</span>
+                <span class="setting-name" data-i18n="settings_camera_name">🔍 Camera View Distance</span>
+                <span class="setting-desc" data-i18n="settings_camera_desc">Bird's-eye view zoom distance</span>
               </div>
               <select class="setting-select" id="settingCameraZoom">
-                <option value="normal">Normal Görüş</option>
-                <option value="wide">Geniş Açı (Kuşbakışı)</option>
+                <option value="normal" data-i18n="settings_opt_cam_normal">Normal View</option>
+                <option value="wide" data-i18n="settings_opt_cam_wide">Wide Angle (Bird's Eye)</option>
               </select>
             </div>
 
             <div class="setting-item">
               <div class="setting-info">
-                <span class="setting-name">⚡ 60 FPS Grafik Modu</span>
-                <span class="setting-desc">Yüksek kalite neon ışıkları</span>
+                <span class="setting-name" data-i18n="settings_fps_name">⚡ 60 FPS Graphics Mode</span>
+                <span class="setting-desc" data-i18n="settings_fps_desc">High-quality neon glow lighting</span>
               </div>
               <label class="toggle-switch">
                 <input type="checkbox" id="settingHighFps" checked>
@@ -639,63 +654,64 @@
         </div>
 
         <div class="settings-footer">
-          <button class="reset-data-btn" id="resetProgressBtn">⚠️ Tüm Oyun Verilerini Sıfırla</button>
+          <button class="reset-data-btn" id="resetProgressBtn" data-i18n="settings_reset_btn">⚠️ Reset All Game Data</button>
         </div>
       </div>
     </div>
 
-    <!-- ==================== 🚪 OYUNDAN ÇIKIŞ ONAY PENCERESİ ==================== -->
+    <!-- ==================== 🚪 EXIT CONFIRM MODAL ==================== -->
     <div class="modal-backdrop hidden" id="exitConfirmModal">
       <div class="modal-dialog exit-confirm-dialog">
         <div class="exit-confirm-icon">⭐⚠️⭐</div>
-        <h2 class="modal-title">ARENADAN ÇIK?</h2>
-        <p class="exit-modal-desc">Topladığın tüm puanlar kaydedilecek. Ana menüye dönmek istiyor musun? 😊</p>
+        <h2 class="modal-title" data-i18n="exit_modal_title">EXIT ARENA?</h2>
+        <p class="exit-modal-desc" data-i18n="exit_modal_desc">All collected score will be saved. Return to main menu? 😊</p>
         <div class="exit-modal-actions">
-          <button class="exit-btn-danger" id="confirmExitBtn">Evet, Çık</button>
-          <button class="exit-btn-cancel" id="cancelExitBtn">Hayır, Devam Et! 🎮</button>
+          <button class="exit-btn-danger" id="confirmExitBtn" data-i18n="exit_btn_yes">Yes, Exit</button>
+          <button class="exit-btn-cancel" id="cancelExitBtn" data-i18n="exit_btn_no">No, Keep Playing! 🎮</button>
         </div>
       </div>
     </div>
 
-    <!-- ==================== OYUN BİTTİ (GAME OVER / RESPAWN) ==================== -->
+    <!-- ==================== GAME OVER SCREEN ==================== -->
     <div class="game-overlay hidden" id="gameOverScreen">
       <div class="gameover-popup-card">
-        <button class="gameover-close-btn" id="closeGameOverBtn" title="Ana Menüye Dön">✕</button>
+        <button class="gameover-close-btn" id="closeGameOverBtn" title="Return to Main Menu" data-i18n-title="hud_exit_title">✕</button>
         <div class="skull-anim">💥</div>
-        <h2 class="gameover-title">EZİLDİN!</h2>
-        <p class="gameover-killedby" id="killedByText">Başka bir solucana çarptın! 🍭</p>
+        <h2 class="gameover-title" data-i18n="gameover_title">SQUASHED!</h2>
+        <p class="gameover-killedby" id="killedByText" data-i18n="gameover_killed_by">You crashed into another worm! 🍭</p>
 
         <div class="end-stats-grid">
           <div class="end-stat-box">
-            <span class="end-stat-label">Kazanılan Altın</span>
+            <span class="end-stat-label" data-i18n="stat_coins_label">Earned Coins</span>
             <span class="end-stat-value highlight-gold">+<span id="earnedCoinsVal">0</span> 🪙</span>
           </div>
           <div class="end-stat-box">
-            <span class="end-stat-label">Yok Edilen Bot</span>
+            <span class="end-stat-label" data-i18n="stat_kills_label">Defeated Bots</span>
             <span class="end-stat-value" id="finalKillsVal">0</span>
           </div>
           <div class="end-stat-box">
-            <span class="end-stat-label">Toplam Puan</span>
+            <span class="end-stat-label" data-i18n="stat_score_label">Total Score</span>
             <span class="end-stat-value" id="finalScoreVal">0</span>
           </div>
           <div class="end-stat-box">
-            <span class="end-stat-label">En Yüksek Sıralama</span>
+            <span class="end-stat-label" data-i18n="stat_rank_label">Highest Rank</span>
             <span class="end-stat-value highlight-gold" id="finalRankVal">#1</span>
           </div>
         </div>
 
         <div class="gameover-buttons-row" style="display: flex; flex-direction: column; gap: 10px; width: 100%; margin-top: 14px;">
           <button class="play-btn-large glow-pulse" id="respawnBtn" style="width: 100%;">
-            <span>🔄 TEKRAR OYNA / CANLAN</span>
+            <span data-i18n="gameover_respawn_btn">🔄 PLAY AGAIN / RESPAWN</span>
           </button>
           <button class="room-btn-danger" id="gameOverReturnMenuBtn" style="width: 100%; padding: 12px; font-size: 1rem;">
-            <span>🚪 Ana Menüye Dön ✨</span>
+            <span data-i18n="gameover_return_menu_btn">🚪 Return to Main Menu ✨</span>
           </button>
         </div>
       </div>
     </div>
   </div>
 
+  <script src="i18n.js"></script>
   <script src="audio.js"></script>
   <script src="network.js"></script>
   <script src="game.js"></script>
