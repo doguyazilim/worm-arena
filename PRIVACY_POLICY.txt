@@ -1,6 +1,6 @@
 ====================================================================
                GİZLİLİK POLİTİKASI / PRIVACY POLICY
-                          WORM ARENA
+                      NEON YILAN: WORM CLASH
 ====================================================================
 Geliştirici / Developer: Doğu Yazılım
 Son Güncelleme / Last Updated: 18 Ekim 2026
@@ -12,13 +12,13 @@ Son Güncelleme / Last Updated: 18 Ekim 2026
 --------------------------------------------------------------------
 
 1. GİRİŞ
-Doğu Yazılım tarafından geliştirilen Worm Arena ("Oyun", "biz", "bizim")
+Doğu Yazılım tarafından geliştirilen Neon Yılan: Worm Clash ("Oyun", "biz", "bizim")
 mobil oyununa hoş geldiniz. Oyuncularımızın gizliliğine ve kişisel
 verilerinin güvenliğine en üst düzeyde önem veriyoruz. Bu politika,
 oyunumuzu kullanırken verilerinizin nasıl korunduğunu açıklar.
 
 2. KİŞİSEL VERİ TOPLANMAZ
-Worm Arena, oyuncuların gizliliğine tam saygı duyar:
+Neon Yılan: Worm Clash, oyuncuların gizliliğine tam saygı duyar:
 - Oyunumuzda kayıt olma, üyelik veya e-posta ile giriş zorunluluğu YOKTUR.
 - Adınız, soyadınız, telefon numaranız, adresiniz, rehberiniz, fotoğraflarınız
   veya biyometrik verileriniz KESİNLİKLE toplanmaz, kaydedilmez ve izlenmez.
@@ -35,7 +35,7 @@ Bu veriler yalnızca telefonunuzun içinde kalır; harici hiçbir sunucuya
 aktarılmaz, satılmaz veya üçüncü taraflarla paylaşılmaz.
 
 4. ÇOK OYUNCULU (MULTIPLAYER) MODU
-Worm Arena, isteğe bağlı olarak arkadaşlarla oda kurup oynamayı sağlayan
+Neon Yılan: Worm Clash, isteğe bağlı olarak arkadaşlarla oda kurup oynamayı sağlayan
 Peer-to-Peer (WebRTC) teknolojisini kullanır:
 - Bir odaya bağlandığınızda yalnızca anlık solucan hareket koordinatları
   ve seçtiğiniz takma ad odadaki diğer oyuncularla gerçek zamanlı paylaşılır.
@@ -50,7 +50,7 @@ Peer-to-Peer (WebRTC) teknolojisini kullanır:
   istenildiği zaman kapatılabilir.
 
 6. ÇOCUKLARIN GİZLİLİĞİ (COPPA VE AİLE POLİTİKASI)
-Worm Arena her yaştan kitleye ve ailelere uygundur; Google Play Aile
+Neon Yılan: Worm Clash her yaştan kitleye ve ailelere uygundur; Google Play Aile
 Politikaları ve COPPA kurallarına tam uyumludur. 13 yaşın altındaki
 çocuklardan bilerek hiçbir kişisel bilgi talep edilmez ve toplanmaz.
 
@@ -58,6 +58,7 @@ Politikaları ve COPPA kurallarına tam uyumludur. 13 yaşın altındaki
 Gizlilik politikamızla ilgili tüm soru ve önerileriniz için:
 Geliştirici: Doğu Yazılım
 E-posta: doguyazilim@gmail.com
+Uygulama: Neon Yılan: Worm Clash
 
 
 --------------------------------------------------------------------
@@ -65,7 +66,7 @@ E-posta: doguyazilim@gmail.com
 --------------------------------------------------------------------
 
 1. INTRODUCTION
-Welcome to Worm Arena ("the Game", "we", "us", or "our"), developed by
+Welcome to Neon Yılan: Worm Clash ("the Game", "we", "us", or "our"), developed by
 Doğu Yazılım. We are committed to protecting your privacy and ensuring
 a safe gaming environment for players of all ages.
 
@@ -96,12 +97,12 @@ The optional "Play with Friends" mode uses Peer-to-Peer (WebRTC) technology:
   turned off in settings).
 
 6. CHILDREN'S PRIVACY (COPPA & FAMILIES POLICY)
-Worm Arena complies with the Google Play Families Policy and the Children's
+Neon Yılan: Worm Clash complies with the Google Play Families Policy and the Children's
 Online Privacy Protection Act (COPPA). We do not knowingly collect personal
 information from children under the age of 13.
 
 7. CONTACT
 Developer: Doğu Yazılım
 Email: doguyazilim@gmail.com
-Application: Worm Arena
+Application: Neon Yılan: Worm Clash
 ====================================================================

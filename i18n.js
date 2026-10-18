@@ -10,11 +10,11 @@
   const TRANSLATIONS = {
     en: {
       // General & Metadata
-      app_title: "Worm Arena - Snake & Worm Battle",
-      app_desc: "A thrilling and colorful modern multiplayer snake and worm arena battle.",
+      app_title: "Neon Yılan: Worm Clash",
+      app_desc: "A thrilling and colorful modern multiplayer neon snake and worm clash battle.",
 
       // Splash Screen
-      splash_title: "WORM ARENA",
+      splash_title: "NEON YILAN",
       splash_subtitle: "✨ Colorful Worms World! 🍭",
       splash_loading_status: "🍬 Collecting sweet treats...",
 
@@ -88,7 +88,7 @@
 
       // Main Menu
       menu_legend_badge: "👑 LEGEND",
-      menu_title: "WORM ARENA",
+      menu_title: "NEON YILAN: WORM CLASH",
       menu_subtitle: "🌈 Colorful Worms Battle! 🍭",
       menu_shortcut_wheel: "Fortune Wheel",
       menu_shortcut_wheel_badge: "Free",
@@ -277,11 +277,11 @@
 
     tr: {
       // General & Metadata
-      app_title: "Worm Arena - Solucan & Yılan Savaşı",
-      app_desc: "Mobil cihazlar ve web için özel olarak tasarlanmış modern solucan ve yılan arenası savaşı.",
+      app_title: "Neon Yılan: Worm Clash",
+      app_desc: "Mobil cihazlar ve web için özel olarak tasarlanmış modern neon yılan ve solucan savaşı.",
 
       // Splash Screen
-      splash_title: "WORM ARENA",
+      splash_title: "NEON YILAN",
       splash_subtitle: "✨ Renkli Solucanlar Dünyası! 🍭",
       splash_loading_status: "🍬 Renkli şekerler toplanıyor...",
 
@@ -355,7 +355,7 @@
 
       // Main Menu
       menu_legend_badge: "👑 EFSANE",
-      menu_title: "WORM ARENA",
+      menu_title: "NEON YILAN: WORM CLASH",
       menu_subtitle: "🌈 Renkli Solucanlar Savaşı! 🍭",
       menu_shortcut_wheel: "Şans Çarkı",
       menu_shortcut_wheel_badge: "Ücretsiz",

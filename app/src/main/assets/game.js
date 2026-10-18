@@ -4884,10 +4884,10 @@ class WormArenaGame {
           try {
             const isTr = window.I18N && window.I18N.currentLang === 'tr';
             await navigator.share({
-              title: isTr ? 'Worm Arena - Solucan & Yılan Savaşı' : 'Worm Arena - Snake & Worm Battle',
+              title: isTr ? 'Neon Yılan: Worm Clash - Solucan & Yılan Savaşı' : 'Neon Yılan: Worm Clash - Snake & Worm Battle',
               text: isTr
-                ? `🎮 Worm Arena odama davetlisin!\nOda Kodu: ${roomCode}\nTek tıkla savaşa katıl 👇\n`
-                : `🎮 You're invited to my Worm Arena room!\nRoom Code: ${roomCode}\nJoin the battle with one click 👇\n`,
+                ? `🎮 Neon Yılan: Worm Clash odama davetlisin!\nOda Kodu: ${roomCode}\nTek tıkla savaşa katıl 👇\n`
+                : `🎮 You're invited to my Neon Yılan: Worm Clash room!\nRoom Code: ${roomCode}\nJoin the battle with one click 👇\n`,
               url: inviteUrl
             });
             return;

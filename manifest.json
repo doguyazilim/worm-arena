@@ -1,7 +1,7 @@
 {
-  "name": "Worm Arena - Snake & Worm Battle",
-  "short_name": "Worm Arena",
-  "description": "Modern multiplayer snake and worm arena battle specially designed for mobile devices.",
+  "name": "Neon Yılan: Worm Clash",
+  "short_name": "Neon Yılan",
+  "description": "Modern multiplayer neon snake and worm clash arena battle specially designed for mobile devices.",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0a0c16",

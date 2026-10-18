@@ -4,6 +4,8 @@ build/
 app/build/
 *.apk
 *.aab
+*.jks
+*.keystore
 
 # Browser test profiles & temporary files
 edge_profile/
