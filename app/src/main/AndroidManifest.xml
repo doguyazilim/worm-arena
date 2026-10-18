@@ -16,7 +16,7 @@
         android:usesCleartextTraffic="true"
         android:theme="@style/Theme.NeonYilan.Fullscreen">
         <activity
-            android:name="com.neonyilan.game.MainActivity"
+            android:name="com.doguyazilim.wormarena.MainActivity"
             android:hardwareAccelerated="true"
             android:exported="true"
             android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout"

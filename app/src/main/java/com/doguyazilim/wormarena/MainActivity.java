@@ -1,4 +1,4 @@
-package com.neonyilan.game;
+package com.doguyazilim.wormarena;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
