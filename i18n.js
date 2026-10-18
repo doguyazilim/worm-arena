@@ -77,6 +77,7 @@
 
       // HUD
       hud_leaderboard: "LEADERBOARD",
+      target_score_badge: "🎯 GOAL: 20K",
       hud_powerup_magnet: "MAGNET",
       hud_powerup_ghost: "GHOST",
       hud_powerup_double: "2X POINTS",
@@ -249,6 +250,14 @@
       gameover_respawn_btn: "🔄 PLAY AGAIN / RESPAWN",
       gameover_return_menu_btn: "🚪 Return to Main Menu ✨",
 
+      // Victory Screen (20K Points Win)
+      victory_title: "ARENA CHAMPION!",
+      victory_subtitle: "You reached 20,000 points and conquered the arena! Glorious victory! 🎉",
+      victory_match_finished: "MATCH FINISHED!",
+      victory_winner_other: "{winner} reached 20,000 points and won the game!",
+      stat_winner_label: "Winner",
+      stat_bonus_label: "Champion Bonus",
+
       // Network / Status
       net_connecting: "Connecting to host...",
       net_trying_reach: "Trying to reach host ({attempt}/{max})...",
@@ -335,6 +344,7 @@
 
       // HUD
       hud_leaderboard: "LİDERLİK",
+      target_score_badge: "🎯 HEDEF: 20K",
       hud_powerup_magnet: "MIKNATIS",
       hud_powerup_ghost: "HAYALET",
       hud_powerup_double: "2X PUAN",
@@ -506,6 +516,14 @@
       stat_rank_label: "En Yüksek Sıralama",
       gameover_respawn_btn: "🔄 TEKRAR OYNA / CANLAN",
       gameover_return_menu_btn: "🚪 Ana Menüye Dön ✨",
+
+      // Victory Screen (20K Points Win)
+      victory_title: "ARENA ŞAMPİYONU!",
+      victory_subtitle: "20.000 puana ulaşarak arenayı fethettin! Harika bir zafer! 🎉",
+      victory_match_finished: "MAÇ SONA ERDİ!",
+      victory_winner_other: "{winner} 20.000 puana ulaşarak maçı kazandı!",
+      stat_winner_label: "Kazanan",
+      stat_bonus_label: "Şampiyon Bonusu",
 
       // Network / Status
       net_connecting: "Oda sahibine bağlanılıyor...",

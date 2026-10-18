@@ -17,6 +17,11 @@ class NetworkManager {
     this.hostConn = null; // Client için: host DataConnection
     this.myPeerId = null;
 
+    // Client lobi el sıkışma ve teyit kontrolü
+    this.clientHelloInterval = null;
+    this.hasReceivedHelloAck = false;
+    this.hostLobbyPlayers = null;
+
     // Input gönderme kısıtlayıcı (bant genişliği tasarrufu)
     this.lastSentAngle = -999;
     this.lastSentBoosting = null;
@@ -93,7 +98,7 @@ class NetworkManager {
 
       this.isHost = true;
       this.isMultiplayer = true;
-      this.roomCode = customCode || this.generateRoomCode();
+      this.roomCode = String(customCode || this.generateRoomCode()).trim().replace(/[^0-9a-zA-Z]/g, '');
       const peerId = `wormarena-${this.roomCode}`;
 
       if (typeof Peer === 'undefined') {
@@ -144,11 +149,28 @@ class NetworkManager {
         if (this.heartbeatInterval) clearInterval(this.heartbeatInterval);
         this.heartbeatInterval = setInterval(() => {
           if (!this.isHost || !this.roomCode) return;
-          if (this.peer && this.peer.disconnected && !this.peer.destroyed) {
-            console.log('Host sinyal bağlantısı yenileniyor...');
-            try { this.peer.reconnect(); } catch (e) {}
+          const isPeerDead = !this.peer || this.peer.destroyed || this.peer.disconnected;
+          const isSocketDead = this.peer && this.peer.socket && (
+            this.peer.socket.disconnected ||
+            (this.peer.socket._ws && this.peer.socket._ws.readyState !== 1)
+          );
+
+          if (isPeerDead || isSocketDead) {
+            console.log('Heartbeat: Host peer bağlantısı kopmuş, baştan kuruluyor...');
+            this.recreateHostPeer();
+          } else {
+            try {
+              if (this.peer && this.peer.socket && this.peer.socket._ws && this.peer.socket._ws.readyState === 1) {
+                this.peer.socket._ws.send(JSON.stringify({ type: 'HEARTBEAT' }));
+              }
+            } catch (e) {}
           }
-        }, 3000);
+
+          // Lobideyken periyodik lobi yayını (her saniye tüm bağlı istemcileri senkronize tut)
+          if (this.game && this.game.state !== 'PLAYING' && this.connections.size > 0) {
+            this.broadcastLobbyState();
+          }
+        }, 1200);
 
         resolve(this.roomCode);
       });
@@ -159,28 +181,23 @@ class NetworkManager {
 
       this.peer.on('disconnected', () => {
         console.warn('Oda sahibi sinyal sunucusundan ayrıldı (arka plan / sekme geçişi). Yeniden bağlanılıyor...');
-        if (this.peer && !this.peer.destroyed) {
-          try {
-            this.peer.reconnect();
-          } catch (e) {
-            console.warn('Peer reconnect hatası:', e);
-          }
-        }
+        this.handleAppResume();
       });
 
       this.peer.on('error', (err) => {
-        if (isFinished) return;
-        console.error('Peer error:', err);
-        if (err.type === 'unavailable-id') {
-          // Kod çakıştıysa yeni bir kod ile hemen tekrar dene
+        console.warn('Host Peer hata:', err);
+        if (!isFinished) {
           isFinished = true;
           clearTimeout(timeoutTimer);
-          this.createRoom(this.generateRoomCode()).then(resolve).catch(reject);
+          if (err && err.type === 'unavailable-id') {
+            this.createRoom(this.generateRoomCode()).then(resolve).catch(reject);
+          } else {
+            if (this.onError) this.onError(err);
+            reject(err);
+          }
         } else {
-          isFinished = true;
-          clearTimeout(timeoutTimer);
-          if (this.onError) this.onError(err);
-          reject(err);
+          // Sonradan gelen kopma hatalarında sessizce yeniden oluştur
+          this.handleAppResume();
         }
       });
     });
@@ -191,19 +208,25 @@ class NetworkManager {
     if (!this.isHost || !this.roomCode) return;
     console.log('Uygulama ön plana geldi. Oda bağlantısı denetleniyor:', this.roomCode);
 
-    if (!this.peer || this.peer.destroyed) {
+    const isPeerDead = !this.peer || this.peer.destroyed || this.peer.disconnected;
+    const isSocketDead = this.peer && this.peer.socket && (
+      this.peer.socket.disconnected ||
+      (this.peer.socket._ws && this.peer.socket._ws.readyState !== 1)
+    );
+
+    if (isPeerDead || isSocketDead) {
+      console.log('Host sinyal bağlantısı kopmuş görünüyor. Baştan kuruluyor...');
       this.recreateHostPeer();
       return;
     }
 
-    if (this.peer.disconnected) {
-      console.log('Host peer sinyal sunucusuna yeniden bağlanıyor...');
-      try {
-        this.peer.reconnect();
-      } catch (e) {
-        console.warn('Reconnect başarısız, peer baştan kuruluyor:', e);
-        this.recreateHostPeer();
+    try {
+      if (this.peer && this.peer.socket && this.peer.socket._ws && this.peer.socket._ws.readyState === 1) {
+        this.peer.socket._ws.send(JSON.stringify({ type: 'HEARTBEAT' }));
       }
+    } catch (e) {
+      console.warn('Soket heartbeat hatası, baştan kuruluyor:', e);
+      this.recreateHostPeer();
     }
   }
 
@@ -216,38 +239,56 @@ class NetworkManager {
     try {
       if (this.peer) this.peer.destroy();
     } catch (e) {}
+    this.peer = null;
 
-    console.log('Host Peer sıfırdan oluşturuluyor:', peerId);
-    this.peer = new Peer(peerId, {
-      debug: 1,
-      config: {
-        iceServers: this.getIceServers(),
-        sdpSemantics: 'unified-plan'
+    // Sunucu tarafında eski soketin temizlenmesi için kısa bir bekleme
+    setTimeout(() => {
+      if (!this.isHost || !this.roomCode) {
+        this.isReconnectingHost = false;
+        return;
       }
-    });
 
-    this.peer.on('open', (id) => {
-      this.myPeerId = id;
-      this.isReconnectingHost = false;
-      console.log('Host Peer başarıyla yeniden aktif edildi:', id);
-      if (this.onLobbyUpdated) this.onLobbyUpdated(this.getLobbyList(), this.roomCode);
-    });
+      console.log('Host Peer sıfırdan oluşturuluyor:', peerId);
+      this.peer = new Peer(peerId, {
+        debug: 1,
+        config: {
+          iceServers: this.getIceServers(),
+          sdpSemantics: 'unified-plan'
+        }
+      });
 
-    this.peer.on('connection', (conn) => {
-      this.handleIncomingConnection(conn);
-    });
+      this.peer.on('open', (id) => {
+        this.myPeerId = id;
+        this.isReconnectingHost = false;
+        console.log('Host Peer başarıyla yeniden aktif edildi:', id);
+        if (this.onLobbyUpdated) this.onLobbyUpdated(this.getLobbyList(), this.roomCode);
+        if (this.game && this.game.state !== 'PLAYING') {
+          this.broadcastLobbyState();
+        }
+      });
 
-    this.peer.on('disconnected', () => {
-      console.warn('Host sinyal koptu, yeniden bağlanılıyor...');
-      if (this.peer && !this.peer.destroyed) {
-        try { this.peer.reconnect(); } catch (e) {}
-      }
-    });
+      this.peer.on('connection', (conn) => {
+        this.handleIncomingConnection(conn);
+      });
 
-    this.peer.on('error', (err) => {
-      console.warn('Host Peer hata:', err);
-      this.isReconnectingHost = false;
-    });
+      this.peer.on('disconnected', () => {
+        console.warn('Host sinyal koptu, yeniden deneniyor...');
+        setTimeout(() => this.handleAppResume(), 1000);
+      });
+
+      this.peer.on('error', (err) => {
+        console.warn('Host Peer hata:', err);
+        this.isReconnectingHost = false;
+        if (err && err.type === 'unavailable-id') {
+          // Eski soket henüz tamamen kapanmamışsa biraz bekleyip tekrar dene
+          setTimeout(() => {
+            if (this.isHost && this.roomCode) {
+              this.recreateHostPeer();
+            }
+          }, 600);
+        }
+      });
+    }, 150);
   }
 
   // Bağlantının açık ve veri aktarmaya hazır olduğunu doğrula
@@ -263,20 +304,48 @@ class NetworkManager {
 
   // Gelen arkadaş bağlantısını karşıla (Host tarafı)
   handleIncomingConnection(conn) {
+    const peerId = conn.peer;
+
     const markConnected = () => {
-      this.connections.set(conn.peer, conn);
+      this.connections.set(peerId, conn);
       if (conn.dataChannel && conn.dataChannel.readyState === 'open') {
         conn._open = true;
       }
-      console.log('Arkadaş bağlandı:', conn.peer);
-      // Bağlanan istemciye anında güncel lobi durumunu yay
+      console.log('Arkadaş veri kanalı bağlandı:', peerId);
+
+      // Lobideysek hemen geçici kayıt aç veya güncelle, odayı anında senkronize et
       if (this.game.state !== 'PLAYING') {
+        if (!this.lobbyPlayers.has(peerId)) {
+          this.lobbyPlayers.set(peerId, {
+            id: peerId,
+            name: 'Misafir_' + String(peerId).slice(-4),
+            skinId: 'white_king',
+            hatId: 'none',
+            isHost: false,
+            ready: false
+          });
+        }
         this.broadcastLobbyState();
       }
     };
 
     // Bağlantıyı HEMEN kaydet - hazır olmasını bekleme!
-    this.connections.set(conn.peer, conn);
+    this.connections.set(peerId, conn);
+
+    // Lobideysek anında lobiye ekle ki oda sahibi beklemeden görsün!
+    if (this.game.state !== 'PLAYING') {
+      if (!this.lobbyPlayers.has(peerId)) {
+        this.lobbyPlayers.set(peerId, {
+          id: peerId,
+          name: 'Misafir_' + String(peerId).slice(-4),
+          skinId: 'white_king',
+          hatId: 'none',
+          isHost: false,
+          ready: false
+        });
+      }
+      this.broadcastLobbyState();
+    }
 
     if (this.isConnReady(conn)) {
       markConnected();
@@ -293,28 +362,28 @@ class NetworkManager {
 
     conn.on('data', (data) => {
       // Veri akışı varsa kanal kesinlikle açıktır!
-      this.connections.set(conn.peer, conn);
+      this.connections.set(peerId, conn);
       if (conn.dataChannel && conn.dataChannel.readyState === 'open') {
         conn._open = true;
       }
-      this.handleClientMessage(conn.peer, data);
+      this.handleClientMessage(peerId, data);
     });
 
     conn.on('close', () => {
-      console.log('Arkadaş ayrıldı:', conn.peer);
-      this.connections.delete(conn.peer);
-      this.lobbyPlayers.delete(conn.peer);
-      this.removeRemotePlayer(conn.peer);
+      console.log('Arkadaş ayrıldı:', peerId);
+      this.connections.delete(peerId);
+      this.lobbyPlayers.delete(peerId);
+      this.removeRemotePlayer(peerId);
 
       // Lobi modundaysak güncel oyuncu listesini herkese yay
       if (this.game.state !== 'PLAYING') {
         this.broadcastLobbyState();
       }
-      if (this.onPlayerLeft) this.onPlayerLeft(conn.peer);
+      if (this.onPlayerLeft) this.onPlayerLeft(peerId);
     });
 
     conn.on('error', (err) => {
-      console.error('İstemci bağlantı hatası:', conn.peer, err);
+      console.error('İstemci bağlantı hatası:', peerId, err);
     });
   }
 
@@ -341,8 +410,34 @@ class NetworkManager {
       { id: 'host', name: hostName, isHost: true, skinId: hostSkin, hatId: hostHat }
     ];
 
-    this.lobbyPlayers.forEach((p) => {
-      list.push(p);
+    const seenIds = new Set(['host']);
+
+    this.lobbyPlayers.forEach((p, pId) => {
+      const actualId = p.id || pId;
+      if (!seenIds.has(actualId)) {
+        seenIds.add(actualId);
+        list.push({
+          id: actualId,
+          name: p.name || 'Misafir',
+          isHost: false,
+          skinId: p.skinId || 'white_king',
+          hatId: p.hatId || 'none'
+        });
+      }
+    });
+
+    // Ayrıca connections içinde olup da henüz lobbyPlayers'a girmemiş olan aktif bağlantıları da listeye dahil et!
+    this.connections.forEach((conn, peerId) => {
+      if (peerId && !seenIds.has(peerId)) {
+        seenIds.add(peerId);
+        list.push({
+          id: peerId,
+          name: 'Misafir_' + String(peerId).slice(-4),
+          isHost: false,
+          skinId: 'white_king',
+          hatId: 'none'
+        });
+      }
     });
 
     return list;
@@ -367,23 +462,52 @@ class NetworkManager {
     if (!data || !data.type) return;
 
     if (data.type === 'PLAYER_HELLO') {
+      const pId = data.peerId || peerId;
       const pInfo = {
-        id: peerId,
+        id: pId,
         name: (data.name || 'Misafir').substring(0, 14),
         skinId: data.skinId || 'white_king',
         hatId: data.hatId || 'none',
-        isHost: false
+        isHost: false,
+        ready: true
       };
-      this.lobbyPlayers.set(peerId, pInfo);
+      this.lobbyPlayers.set(pId, pInfo);
+      if (peerId && pId !== peerId) {
+        this.lobbyPlayers.set(peerId, pInfo);
+      }
 
       // Ses çal
       if (typeof sounds !== 'undefined' && sounds.playSpecial) {
         sounds.playSpecial();
       }
 
+      // Client'a anında onay (HELLO_ACK) paketi gönder
+      const clientConn = this.connections.get(peerId) || this.connections.get(pId);
+      if (clientConn && this.isConnReady(clientConn)) {
+        try {
+          clientConn.send({
+            type: 'HELLO_ACK',
+            peerId: pId,
+            roomCode: this.roomCode,
+            hostName: (this.game && this.game.getPlayerName) ? this.game.getPlayerName() : 'Oda Sahibi'
+          });
+        } catch (e) {
+          console.warn('HELLO_ACK gönderme hatası:', e);
+        }
+      }
+
       // Odaya katılan oyuncuyu lobiye ekle ve güncel oyuncu listesini herkese yay
-      // EĞER OYUN HALİHAZIRDA OYNANIYORSA, YENİ GELEN OYUNCUYU DERHAL ARENAYA GÜVENLİ SOK!
+      // EĞER OYUN HALİHAZIRDA OYNANIYORSA, YENİ/TEKRAR GELEN OYUNCUYU DERHAL ARENAYA GÜVENLİ SOK!
       if (this.game.state === 'PLAYING') {
+        // Eğer aynı isimde veya eski bağlantıda kalmış eski bir remotePlayer varsa temizle
+        for (const [oldId, oldWorm] of this.remotePlayers.entries()) {
+          if (oldId !== pId && (oldWorm.name === pInfo.name || oldWorm.isDead)) {
+            this.remotePlayers.delete(oldId);
+            this.lobbyPlayers.delete(oldId);
+            this.connections.delete(oldId);
+          }
+        }
+
         const skin = (typeof SKINS !== 'undefined' && SKINS.find(s => s.id === pInfo.skinId)) || SKINS[0];
         const angle = Math.random() * Math.PI * 2;
         const spawnRadius = 850;
@@ -391,15 +515,15 @@ class NetworkManager {
         const ry = Math.round(this.game.worldHeight / 2 + Math.sin(angle) * spawnRadius);
         const faceAngle = Number((angle + Math.PI / 2).toFixed(2));
         const worm = new Worm(rx, ry, pInfo.name, skin, false);
-        worm.peerId = peerId;
+        worm.peerId = pId;
         worm.hat = pInfo.hatId || 'none';
         worm.angle = faceAngle;
         worm.targetAngle = faceAngle;
-        worm.ghostTimer = 180;
-        this.remotePlayers.set(peerId, worm);
+        worm.ghostTimer = 0; // Hayalet modu kaldırıldı: tam görünür ve fiziksel
+        this.remotePlayers.set(pId, worm);
 
         // Yeni katılan oyuncuya hem kendi noktasını hem de tüm canlı oyuncuların anlık konumunu gönder
-        const activeSpawns = { [peerId]: { x: rx, y: ry, angle: faceAngle } };
+        const activeSpawns = { [pId]: { x: rx, y: ry, angle: faceAngle } };
         if (this.game.player) {
           activeSpawns['host'] = {
             x: Math.round(this.game.player.x),
@@ -416,10 +540,10 @@ class NetworkManager {
         });
 
         const sendGameStart = () => {
-          const conn = this.connections.get(peerId);
-          if (this.isConnReady(conn)) {
+          const sendConn = this.connections.get(peerId) || this.connections.get(pId);
+          if (sendConn && this.isConnReady(sendConn)) {
             try {
-              conn.send({
+              sendConn.send({
                 type: 'GAME_START',
                 roomCode: this.roomCode,
                 worldWidth: this.game.worldWidth,
@@ -435,8 +559,17 @@ class NetworkManager {
         };
 
         sendGameStart();
-        setTimeout(sendGameStart, 150);
-        setTimeout(sendGameStart, 400);
+        setTimeout(sendGameStart, 100);
+        setTimeout(sendGameStart, 250);
+        setTimeout(sendGameStart, 500);
+
+        // Canlı lider tablosunu güncelle
+        if (this.game && this.game.updateLeaderboard) {
+          const allWorms = this.game.player
+            ? [this.game.player, ...this.game.bots, ...this.remotePlayers.values()]
+            : [...this.game.bots, ...this.remotePlayers.values()];
+          this.game.updateLeaderboard(allWorms);
+        }
       } else {
         this.broadcastLobbyState();
       }
@@ -497,7 +630,7 @@ class NetworkManager {
       const worm = new Worm(rx, ry, playerName, skin, false);
       worm.peerId = peerId;
       worm.hat = hatId;
-      worm.ghostTimer = 180;
+      worm.ghostTimer = 0;
       this.remotePlayers.set(peerId, worm);
 
       if (this.game && this.game.updateLeaderboard) {
@@ -523,6 +656,20 @@ class NetworkManager {
   // Tüm odadaki oyuncular aynı saniyede oyuna başlar.
   startRoomGame(includeBots = false) {
     if (!this.isHost) return;
+
+    // Bağlı tüm istemcilerin lobbyPlayers içinde var olduğundan %100 emin ol
+    this.connections.forEach((conn, peerId) => {
+      if (peerId && !this.lobbyPlayers.has(peerId)) {
+        this.lobbyPlayers.set(peerId, {
+          id: peerId,
+          name: 'Misafir_' + String(peerId).slice(-4),
+          skinId: 'white_king',
+          hatId: 'none',
+          isHost: false,
+          ready: true
+        });
+      }
+    });
 
     const list = this.getLobbyList();
     const count = list.length;
@@ -551,15 +698,17 @@ class NetworkManager {
 
     // Host tarafında uzaktaki arkadaşlar için Worm nesnelerini kur
     this.remotePlayers.clear();
-    this.lobbyPlayers.forEach((p, peerId) => {
+    list.forEach((p) => {
+      if (p.isHost) return;
+      const peerId = p.id;
       const skin = (typeof SKINS !== 'undefined' && SKINS.find(s => s.id === p.skinId)) || SKINS[0];
       const sp = spawns[peerId] || { x: centerX, y: centerY, angle: 0 };
       const worm = new Worm(sp.x, sp.y, p.name, skin, false);
       worm.peerId = peerId;
       worm.hat = p.hatId || 'none';
-      worm.angle = sp.angle;
-      worm.targetAngle = sp.angle;
-      worm.ghostTimer = 180; // Başlangıç koruması: ilk 3 saniye tam hasarsızlık
+      worm.angle = sp.angle || 0;
+      worm.targetAngle = sp.angle || 0;
+      worm.ghostTimer = 0; // Hayalet modu kaldırıldı
       this.remotePlayers.set(peerId, worm);
     });
 
@@ -581,25 +730,40 @@ class NetworkManager {
     // İlk paket hemen gönderilir
     this.broadcast(payload);
 
-    // WebRTC paket kaybına karşı 120ms ve 280ms sonra teyit paketleri gönderilir
+    // WebRTC paket kaybına karşı çoklu teyit paketleri gönderilir (hiçbir istemci lobide takılı kalamaz!)
     setTimeout(() => {
       if (this.isHost && this.game.state === 'PLAYING') {
         this.broadcast(payload);
       }
-    }, 120);
+    }, 80);
     setTimeout(() => {
       if (this.isHost && this.game.state === 'PLAYING') {
         this.broadcast(payload);
       }
-    }, 280);
+    }, 200);
+    setTimeout(() => {
+      if (this.isHost && this.game.state === 'PLAYING') {
+        this.broadcast(payload);
+      }
+    }, 450);
+    setTimeout(() => {
+      if (this.isHost && this.game.state === 'PLAYING') {
+        this.broadcast(payload);
+      }
+    }, 800);
+    setTimeout(() => {
+      if (this.isHost && this.game.state === 'PLAYING') {
+        this.broadcast(payload);
+      }
+    }, 1200);
   }
 
   // ==================== 3. ODAYA KATIL (CLIENT OL) ====================
-  // WhatsApp'tan oyuna dönen oda sahibine yeterli zaman tanımak için 6 aşamalı sabırlı yeniden deneme yapar
+  // WhatsApp'tan oyuna dönen oda sahibine yeterli zaman tanımak için 10 aşamalı sabırlı yeniden deneme yapar
   joinRoom(code, attempt = 1) {
-    const MAX_ATTEMPTS = 6;
+    const MAX_ATTEMPTS = 10;
     const ATTEMPT_TIMEOUT_MS = 10000;
-    const RETRY_DELAY_MS = 2500;
+    const RETRY_DELAY_MS = 2000;
 
     return new Promise((resolve, reject) => {
       this.disconnect();
@@ -611,7 +775,7 @@ class NetworkManager {
 
       this.isHost = false;
       this.isMultiplayer = true;
-      this.roomCode = code.trim();
+      this.roomCode = String(code).trim().replace(/[^0-9a-zA-Z]/g, '');
       const targetHostId = `wormarena-${this.roomCode}`;
 
       if (typeof Peer === 'undefined') {
@@ -683,6 +847,29 @@ class NetworkManager {
         // Güvenilir veri kanalı ile host'a bağlan
         const conn = this.peer.connect(targetHostId, { reliable: true });
 
+        let settled = false;
+        this.hasReceivedHelloAck = false;
+
+        const sendPlayerHello = () => {
+          if (!this.hostConn) return;
+          const defaultPlayerName = window.I18N ? window.I18N.t('player_default') : 'Player';
+          const playerName = this.customPlayerName || ((this.game && this.game.getPlayerName) ? this.game.getPlayerName() : defaultPlayerName);
+          const skinId = (this.game && this.game.getSelectedSkinId) ? this.game.getSelectedSkinId() : 'white_king';
+          const hatId = (this.game && this.game.equippedHat) ? this.game.equippedHat : 'none';
+
+          try {
+            this.hostConn.send({
+              type: 'PLAYER_HELLO',
+              peerId: this.myPeerId,
+              name: playerName,
+              skinId: skinId,
+              hatId: hatId
+            });
+          } catch (e) {
+            console.warn('PLAYER_HELLO gönderme hatası:', e);
+          }
+        };
+
         const setupClientConn = () => {
           if (isStale() || settled) return;
           settled = true;
@@ -691,20 +878,23 @@ class NetworkManager {
           if (conn.dataChannel && conn.dataChannel.readyState === 'open') {
             conn._open = true;
           }
-          console.log('Odaya başarıyla bağlandı!');
+          console.log('Odaya başarıyla bağlandı! Peer ID:', this.myPeerId);
 
-          // Host'a profil ve kostüm bilgilerini gönder
-          const defaultPlayerName = window.I18N ? window.I18N.t('player_default') : 'Player';
-          const playerName = (this.game && this.game.getPlayerName) ? this.game.getPlayerName() : defaultPlayerName;
-          const skinId = (this.game && this.game.getSelectedSkinId) ? this.game.getSelectedSkinId() : 'white_king';
-          const hatId = (this.game && this.game.equippedHat) ? this.game.equippedHat : 'none';
+          // Host'a profil ve kostüm bilgilerini hemen gönder
+          sendPlayerHello();
 
-          conn.send({
-            type: 'PLAYER_HELLO',
-            name: playerName,
-            skinId: skinId,
-            hatId: hatId
-          });
+          // Host'tan teyit (HELLO_ACK veya LOBBY_STATE) gelene kadar her 350ms'de bir selam paketini tekrarla (paket kaybı sigortası)
+          if (this.clientHelloInterval) clearInterval(this.clientHelloInterval);
+          this.clientHelloInterval = setInterval(() => {
+            if (this.hasReceivedHelloAck || this.game.state === 'PLAYING' || !this.hostConn) {
+              clearInterval(this.clientHelloInterval);
+              this.clientHelloInterval = null;
+              return;
+            }
+            if (this.isConnReady(this.hostConn)) {
+              sendPlayerHello();
+            }
+          }, 350);
 
           resolve(this.roomCode);
         };
@@ -774,38 +964,83 @@ class NetworkManager {
   handleHostMessage(data) {
     if (!data || !data.type) return;
 
-    if (data.type === 'LOBBY_STATE') {
-      // Host'tan gelen güncel lobi oyuncu listesi (sadece lobideyken)
-      if (this.game.state === 'START') {
+    if (data.type === 'HELLO_ACK') {
+      console.log('Host HELLO_ACK aldı! Lobiye kesin olarak eklendik.');
+      this.hasReceivedHelloAck = true;
+      if (this.clientHelloInterval) {
+        clearInterval(this.clientHelloInterval);
+        this.clientHelloInterval = null;
+      }
+      const myLobbyBadge = document.getElementById('myLobbyBadge');
+      if (myLobbyBadge) {
+        myLobbyBadge.textContent = window.I18N ? window.I18N.t('mp_badge_ready') : 'READY';
+        myLobbyBadge.className = 'lobby-ready-badge';
+      }
+      const waitingStatusText = document.getElementById('waitingStatusText');
+      if (waitingStatusText) {
+        waitingStatusText.textContent = window.I18N ? window.I18N.t('mp_waiting_status_text') : "Host hasn't started the game yet. Please wait...";
+      }
+    } else if (data.type === 'LOBBY_STATE') {
+      if (data.players && Array.isArray(data.players)) {
+        this.hostLobbyPlayers = data.players;
+        const inLobby = data.players.some(p => p.id === this.myPeerId);
+        if (inLobby) {
+          this.hasReceivedHelloAck = true;
+          if (this.clientHelloInterval) {
+            clearInterval(this.clientHelloInterval);
+            this.clientHelloInterval = null;
+          }
+        }
+      }
+      // Sadece lobi veya menüdeyken UI'ı güncelle
+      if (this.game.state !== 'PLAYING') {
         if (this.onLobbyUpdated) {
           this.onLobbyUpdated(data.players || [], data.roomCode);
         }
       }
     } else if (data.type === 'GAME_START') {
-      if (this.game.state !== 'START') {
-        return; // Zaten oyun başladıysa veya ölü/bitiş durumundaysa mükerrer teyit paketlerini yoksay
+      // Eğer istemci zaten bu oturumda aktif oynuyorsa mükerrer başlatmayı yoksay
+      if (this.game.state === 'PLAYING' && this.game.player && this.game.player.peerId === this.myPeerId) {
+        return;
+      }
+      if (this.clientHelloInterval) {
+        clearInterval(this.clientHelloInterval);
+        this.clientHelloInterval = null;
       }
 
-      console.log('GAME_START paketi alındı! Oyuna başlanıyor...');
+      console.log('GAME_START paketi alındı! Arenaya giriliyor...');
       this.game.worldWidth = data.worldWidth || 6400;
       this.game.worldHeight = data.worldHeight || 6400;
 
-      // Bekleme odasını ve çok oyunculu modalı hemen kapat
+      // Bekleme odasını ve tüm pencereleri anında kapat
       const multiplayerModal = document.getElementById('multiplayerModal');
       if (multiplayerModal) {
         multiplayerModal.classList.add('hidden');
         multiplayerModal.style.display = 'none';
       }
       const waitingRoomTabContent = document.getElementById('waitingRoomTabContent');
-      if (waitingRoomTabContent) waitingRoomTabContent.classList.add('hidden');
+      if (waitingRoomTabContent) {
+        waitingRoomTabContent.classList.add('hidden');
+        waitingRoomTabContent.style.display = 'none';
+      }
       const joinRoomTabContent = document.getElementById('joinRoomTabContent');
-      if (joinRoomTabContent) joinRoomTabContent.classList.add('hidden');
+      if (joinRoomTabContent) {
+        joinRoomTabContent.classList.add('hidden');
+        joinRoomTabContent.style.display = 'none';
+      }
       const createRoomTabContent = document.getElementById('createRoomTabContent');
-      if (createRoomTabContent) createRoomTabContent.classList.add('hidden');
+      if (createRoomTabContent) {
+        createRoomTabContent.classList.add('hidden');
+        createRoomTabContent.style.display = 'none';
+      }
 
       if (this.game.startScreen) {
         this.game.startScreen.classList.add('hidden');
         this.game.startScreen.style.display = 'none';
+      }
+      if (this.game.gameOverScreen) {
+        this.game.gameOverScreen.classList.add('hidden');
+        this.game.gameOverScreen.style.display = 'none';
       }
 
       // Tohum tabanlı yiyecekleri başlat
@@ -832,28 +1067,33 @@ class NetworkManager {
       } else if (data.mySpawn) {
         mySp = data.mySpawn;
       }
+      if (!mySp) {
+        mySp = {
+          x: Math.round(this.game.worldWidth / 2 + (Math.random() - 0.5) * 600),
+          y: Math.round(this.game.worldHeight / 2 + (Math.random() - 0.5) * 600),
+          angle: Number((Math.random() * Math.PI * 2).toFixed(2))
+        };
+      }
 
       // Diğer oyuncuları remotePlayers içine ekle
       this.remotePlayers.clear();
       const playersList = data.players || [];
       playersList.forEach(p => {
         const pId = p.id || p.peerId;
-        if (pId !== this.myPeerId) {
+        if (pId !== this.myPeerId && pId !== 'me') {
           const skin = (typeof SKINS !== 'undefined' && SKINS.find(s => s.id === p.skinId)) || SKINS[0];
           const sp = (data.spawns && data.spawns[pId]) || { x: this.game.worldWidth / 2, y: this.game.worldHeight / 2, angle: 0 };
           const worm = new Worm(sp.x, sp.y, p.name, skin, !!p.isBot);
           worm.peerId = pId;
           worm.hat = p.hatId || 'none';
           worm.angle = sp.angle || 0;
-          worm.ghostTimer = 150; // Başlangıç koruması
+          worm.ghostTimer = 0;
           this.remotePlayers.set(pId, worm);
         }
       });
 
       // İstemci oyununu başlat
-      if (this.game.state !== 'PLAYING') {
-        this.game.startMultiplayerClientGame(mySp);
-      }
+      this.game.startMultiplayerClientGame(mySp);
     } else if (data.type === 'RESPAWN_ACK') {
       // Tekrar canlanma onayı
       if (!this.game.player) {
@@ -864,7 +1104,7 @@ class NetworkManager {
         this.game.player.x = data.x;
         this.game.player.y = data.y;
         this.game.player.isDead = false;
-        this.game.player.ghostTimer = 180;
+        this.game.player.ghostTimer = 0;
         this.game.player.radius = 11;
         this.game.player.score = 15;
         this.game.player.body = [];
@@ -880,16 +1120,37 @@ class NetworkManager {
       this.game.state = 'PLAYING';
     } else if (data.type === 'GAME_TICK') {
       // Host'tan gelen anlık fizik karesi
-      // EĞER OYUN HENÜZ BAŞLATILMAMIŞSA (sadece ve sadece lobi/menü durumundayken):
-      // SADECE host bu istemci için resmi ve canlı bir solucan oluşturduysa arenaya gir!
-      if (this.game.state === 'START') {
-        const myWormData = data.worms ? data.worms.find(w => w.peerId === this.myPeerId && !w.isDead) : null;
-        if (!myWormData) {
-          // Henüz oda sahibi oyunu başlatmadı veya canlı solucan tanımlanmadı, bekleme odasında kalmaya devam et
-          return;
+      // EĞER OYUN HENÜZ BAŞLATILMAMIŞSA (istemci lobideyken host oyunu başlattıysa ama GAME_START paketi ağda kaybolduysa):
+      if (this.game.state !== 'PLAYING') {
+        console.log('GAME_TICK alındı, oyun henüz başlamamıştı - Arenaya senkronize giriliyor!');
+        if (this.clientHelloInterval) {
+          clearInterval(this.clientHelloInterval);
+          this.clientHelloInterval = null;
         }
-        console.log('GAME_TICK alındı, oyun lobi durumundaydı - Arenaya senkronize giriliyor!');
-        const mySp = { x: myWormData.x, y: myWormData.y, angle: myWormData.angle };
+        let mySp = null;
+        if (data.worms) {
+          const myWormData = data.worms.find(w => w.peerId === this.myPeerId && !w.isDead);
+          if (myWormData) {
+            mySp = { x: myWormData.x, y: myWormData.y, angle: myWormData.angle };
+          }
+        }
+        if (!mySp) {
+          mySp = {
+            x: Math.round(this.game.worldWidth / 2 + (Math.random() - 0.5) * 600),
+            y: Math.round(this.game.worldHeight / 2 + (Math.random() - 0.5) * 600),
+            angle: 0
+          };
+        }
+        const multiplayerModal = document.getElementById('multiplayerModal');
+        if (multiplayerModal) {
+          multiplayerModal.classList.add('hidden');
+          multiplayerModal.style.display = 'none';
+        }
+        const waitingRoomTabContent = document.getElementById('waitingRoomTabContent');
+        if (waitingRoomTabContent) {
+          waitingRoomTabContent.classList.add('hidden');
+          waitingRoomTabContent.style.display = 'none';
+        }
         this.game.startMultiplayerClientGame(mySp);
       }
 
@@ -945,7 +1206,8 @@ class NetworkManager {
               worm.body = [{ x: rawPts[0].x, y: rawPts[0].y }];
             } else {
               const dense = [{ x: rawPts[0].x, y: rawPts[0].y }];
-              const targetSpacing = worm.spacing || 6.0;
+              const targetSpacing = Math.max(6.5, (wData.radius || 11) * 0.52);
+              worm.spacing = targetSpacing;
               for (let k = 1; k < rawPts.length; k++) {
                 const prev = dense[dense.length - 1];
                 const curr = rawPts[k];
@@ -1016,7 +1278,26 @@ class NetworkManager {
           if (this.game.foods[idx]) this.game.foods.splice(idx, 1);
         });
       }
+    } else if (data.type === 'GAME_VICTORY') {
+      const winnerWorm = (this.game && this.game.player && (data.winnerPeerId === this.myPeerId || data.winnerName === this.game.player.name))
+        ? this.game.player
+        : (this.remotePlayers.get(data.winnerPeerId) || { name: data.winnerName, score: data.score || 20000, kills: data.kills || 0 });
+      if (this.game && this.game.handleVictory) {
+        this.game.handleVictory(winnerWorm);
+      }
     }
+  }
+
+  // Host: Zafer durumunu tüm bağlı istemcilere yayınla (20.000 puan kuralı)
+  broadcastVictory(winnerName, winnerPeerId, score, kills) {
+    if (!this.isHost) return;
+    this.broadcast({
+      type: 'GAME_VICTORY',
+      winnerName: winnerName,
+      winnerPeerId: winnerPeerId,
+      score: score || 20000,
+      kills: kills || 0
+    });
   }
 
   // ==================== 4. ANLIK DURUM YAYINI (HOST) ====================
@@ -1147,6 +1428,10 @@ class NetworkManager {
     if (this.isHost && this.connections.size > 0) {
       this.broadcast({ type: 'HOST_CLOSED' });
     }
+    if (this.clientHelloInterval) {
+      clearInterval(this.clientHelloInterval);
+      this.clientHelloInterval = null;
+    }
     if (this.peer) {
       try {
         this.peer.destroy();
@@ -1157,6 +1442,8 @@ class NetworkManager {
       clearInterval(this.heartbeatInterval);
       this.heartbeatInterval = null;
     }
+    this.hasReceivedHelloAck = false;
+    this.hostLobbyPlayers = null;
     this.isReconnectingHost = false;
     this.connections.clear();
     this.lobbyPlayers.clear();

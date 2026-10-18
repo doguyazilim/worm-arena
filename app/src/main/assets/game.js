@@ -91,7 +91,7 @@ const FOOD_TYPES = [
   { type: 'orb', icon: '✨', points: 8, radius: 9, color: '#00f0ff' },
   // Güçlendirme Meyveleri
   { type: 'magnet', icon: '🧲', points: 25, radius: 18, color: '#ff0055', isPowerup: true },
-  { type: 'ghost', icon: '👻', points: 25, radius: 18, color: '#a0c4ff', isPowerup: true },
+  { type: 'energy_star', icon: '⚡', points: 30, radius: 18, color: '#ffee00', isPowerup: true },
   { type: 'double', icon: '2️⃣', points: 25, radius: 18, color: '#00ff88', isPowerup: true }
 ];
 
@@ -915,24 +915,23 @@ class Worm {
     // Hız ve Boyut Hesaplama (Başlangıçta minyon, puan topladıkça devasa ejdere dönüşür)
     this.radius = Math.min(28, 11 + Math.floor(this.score / 180));
     this.targetLength = Math.max(8, 11 + Math.floor(this.score / 15));
+    // Yılan büyüdükçe segment aralığını orantılı genişlet (böylece gövde kafanın içinde kaybolmaz!)
+    this.spacing = Math.max(6.5, this.radius * 0.52);
 
     // Bot Yapay Zeka Mantığı
     if (this.isBot) {
       this.updateAI(worldW, worldH, foods, allWorms);
     }
 
-    // Açıyı hedefe doğru yumuşak ve akıcı döndür (360° dönüşlerde durma/kilitlenme olmadan sürekli hareket)
+    // Açıyı hedefe doğru ultra akıcı, pürüzsüz ve organik döndür (Slither.io / Wormate.io dinamiği)
     let diff = this.targetAngle - this.angle;
     while (diff < -Math.PI) diff += Math.PI * 2;
     while (diff > Math.PI) diff -= Math.PI * 2;
 
-    // Slither.io / Wormate.io tarzı yumuşak maksimum dönüş hızı (Geniş ve akıcı yay)
-    const maxTurnSpeed = this.isBoosting ? 0.105 : 0.082;
-    if (Math.abs(diff) <= maxTurnSpeed) {
-      this.angle = this.targetAngle;
-    } else {
-      this.angle += Math.sign(diff) * maxTurnSpeed;
-    }
+    const turnFactor = this.isBoosting ? 0.18 : 0.13;
+    const maxTurnSpeed = this.isBoosting ? 0.14 : 0.098;
+    const turnStep = Math.max(-maxTurnSpeed, Math.min(maxTurnSpeed, diff * turnFactor * 1.35));
+    this.angle += turnStep;
 
     // Açıyı [-PI, PI] aralığında normalize et (Açı taşması ve yön kilitlenmesini kesin önler)
     while (this.angle < -Math.PI) this.angle += Math.PI * 2;
@@ -951,7 +950,7 @@ class Worm {
       return;
     }
 
-    // Gövde Hareketi (Her segment öndekini kesintisiz takip eder, 360 dönüşlerde gövde ASLA donmaz ve durmaz)
+    // Gövde Hareketi (Segmentler arası ultra akıcı, yaylanan pürüzsüz omurga takibi)
     if (this.body.length > 0) {
       let prevX = this.x;
       let prevY = this.y;
@@ -964,8 +963,11 @@ class Worm {
         const dist = Math.hypot(dx, dy);
 
         if (dist > 0.001) {
-          seg.x = prevX - (dx / dist) * sp;
-          seg.y = prevY - (dy / dist) * sp;
+          const targetX = prevX - (dx / dist) * sp;
+          const targetY = prevY - (dy / dist) * sp;
+          // Ultra akıcı yumuşak takip (dalgalanma ve ipeksi dönüş)
+          seg.x += (targetX - seg.x) * 0.95;
+          seg.y += (targetY - seg.y) * 0.95;
         } else {
           seg.x = prevX - Math.cos(this.angle) * sp;
           seg.y = prevY - Math.sin(this.angle) * sp;
@@ -1055,17 +1057,23 @@ class Worm {
     const headX = this.x - camera.x;
     const headY = this.y - camera.y;
 
-    // Viewport Culling: Solucanın başı veya herhangi bir gövde parçası ekranda mı?
-    // Geniş kamera (zoom: 0.85) ve uzun gövde dönüşleri için cömert sınır (Solucanların yok olmasını %100 önler)
-    const margin = 220;
-    let isVisible = (headX >= -margin && headX <= screenW + margin && headY >= -margin && headY <= screenH + margin);
+    // Viewport Culling: Kamera ölçeğine (zoom) göre dinamik ekran sınırları
+    const zoom = (camera && camera.scale) ? camera.scale : 1.0;
+    const halfW = (screenW / 2) / zoom;
+    const halfH = (screenH / 2) / zoom;
+    const minX = screenW / 2 - halfW - 140;
+    const maxX = screenW / 2 + halfW + 140;
+    const minY = screenH / 2 - halfH - 140;
+    const maxY = screenH / 2 + halfH + 140;
+
+    let isVisible = (headX >= minX && headX <= maxX && headY >= minY && headY <= maxY);
 
     if (!isVisible && this.body && this.body.length > 0) {
-      for (let i = 0; i < this.body.length; i++) {
+      for (let i = 0; i < this.body.length; i += 3) {
         const seg = this.body[i];
         const sx = seg.x - camera.x;
         const sy = seg.y - camera.y;
-        if (sx >= -margin && sx <= screenW + margin && sy >= -margin && sy <= screenH + margin) {
+        if (sx >= minX && sx <= maxX && sy >= minY && sy <= maxY) {
           isVisible = true;
           break;
         }
@@ -1077,11 +1085,7 @@ class Worm {
     }
 
     ctx.save();
-
-    // Hayalet Modu (Yarı Saydam Gövde)
-    if (this.ghostTimer > 0) {
-      ctx.globalAlpha = 0.55;
-    }
+    ctx.globalAlpha = 1.0;
 
     const bodyLen = this.body.length;
 
@@ -1092,7 +1096,7 @@ class Worm {
       const sy = seg.y - camera.y;
 
       // Segment Seviyesi Culling: Ekran dışındaki segmentleri atla
-      if (sx < -45 || sx > screenW + 45 || sy < -45 || sy > screenH + 45) {
+      if (sx < minX || sx > maxX || sy < minY || sy > maxY) {
         continue;
       }
 
@@ -1916,13 +1920,42 @@ class WormArenaGame {
 
   applyBoostPosition() {
     const boostZone = document.querySelector('.boost-control-container');
-    if (boostZone) {
-      if (this.settings.boostPosition === 'left') {
-        boostZone.style.left = '20px';
-        boostZone.style.right = 'auto';
-      } else {
-        boostZone.style.right = '20px';
-        boostZone.style.left = 'auto';
+    const minimap = document.querySelector('.minimap-container');
+    const emotes = document.querySelector('.in-game-emotes');
+    const isLandscape = window.innerWidth > window.innerHeight;
+
+    if (isLandscape) {
+      // Yatay modda kural: Harita sağda, Hızlanma solda!
+      if (boostZone) {
+        boostZone.style.setProperty('left', 'max(env(safe-area-inset-left, 0px) + 14px, 18px)', 'important');
+        boostZone.style.setProperty('right', 'auto', 'important');
+      }
+      if (minimap) {
+        minimap.style.setProperty('right', 'max(env(safe-area-inset-right, 0px) + 14px, 18px)', 'important');
+        minimap.style.setProperty('left', 'auto', 'important');
+      }
+      if (emotes) {
+        emotes.style.setProperty('left', '125px', 'important');
+        emotes.style.setProperty('right', 'auto', 'important');
+      }
+    } else {
+      // Dikey modda ayara göre yerleştir
+      if (boostZone) {
+        if (this.settings.boostPosition === 'left') {
+          boostZone.style.setProperty('left', '20px', 'important');
+          boostZone.style.setProperty('right', 'auto', 'important');
+        } else {
+          boostZone.style.setProperty('right', '20px', 'important');
+          boostZone.style.setProperty('left', 'auto', 'important');
+        }
+      }
+      if (minimap) {
+        minimap.style.setProperty('left', 'max(env(safe-area-inset-left, 0px) + 12px, 16px)', 'important');
+        minimap.style.setProperty('right', 'auto', 'important');
+      }
+      if (emotes) {
+        emotes.style.removeProperty('left');
+        emotes.style.removeProperty('right');
       }
     }
   }
@@ -1943,15 +1976,15 @@ class WormArenaGame {
   initCanvasSize() {
     // Mobil performansı için DPR'ı 1.25 ile sınırla (Görsel kalite bozulmaz, GPU yükü 4 kat azalır)
     const rawDpr = window.devicePixelRatio || 1;
-    const isMobile = window.innerWidth < 768;
-    const maxDpr = isMobile ? 1.25 : 1.5;
+    const isMobile = window.innerWidth < 1024 && (window.innerHeight < 600 || window.innerWidth < 768);
+    const maxDpr = isMobile ? 1.25 : 1.35;
     const dpr = Math.min(rawDpr, maxDpr);
     this.canvas.width = Math.floor(window.innerWidth * dpr);
     this.canvas.height = Math.floor(window.innerHeight * dpr);
     this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
 
-  initFoods(count = 3500) {
+  initFoods(count = 1800) {
     this.foods = [];
     for (let i = 0; i < count; i++) {
       this.spawnFood();
@@ -1959,7 +1992,7 @@ class WormArenaGame {
   }
 
   // Çok oyunculu odada tüm oyuncuların aynı yemleri görmesi için tohum (seed) tabanlı üretim
-  initFoodsWithSeed(seedNum, count = 2000) {
+  initFoodsWithSeed(seedNum, count = 1200) {
     this.foods = [];
     let s = (typeof seedNum === 'string')
       ? seedNum.split('').reduce((acc, c) => (acc * 31 + c.charCodeAt(0)) & 0xffffffff, 12345)
@@ -1981,7 +2014,7 @@ class WormArenaGame {
       else if (rand < 0.92) foodDef = FOOD_TYPES[3]; // Star Coin
       else if (rand < 0.96) foodDef = FOOD_TYPES[4]; // Orb
       else if (rand < 0.975) foodDef = FOOD_TYPES[5]; // Magnet
-      else if (rand < 0.99) foodDef = FOOD_TYPES[6]; // Ghost
+      else if (rand < 0.99) foodDef = FOOD_TYPES[6]; // Energy Star ⚡
       else foodDef = FOOD_TYPES[7]; // Double points
 
       this.foods.push({
@@ -2008,7 +2041,7 @@ class WormArenaGame {
       else if (rand < 0.92) foodDef = FOOD_TYPES[3]; // Star Coin
       else if (rand < 0.96) foodDef = FOOD_TYPES[4]; // Orb
       else if (rand < 0.975) foodDef = FOOD_TYPES[5]; // Magnet
-      else if (rand < 0.99) foodDef = FOOD_TYPES[6]; // Ghost
+      else if (rand < 0.99) foodDef = FOOD_TYPES[6]; // Energy Star ⚡
       else foodDef = FOOD_TYPES[7]; // Double points
     }
 
@@ -2068,8 +2101,10 @@ class WormArenaGame {
 
   getPlayerName() {
     const nameInput = document.getElementById('playerNameInput');
+    const stored = (typeof localStorage !== 'undefined') ? localStorage.getItem('worm_player_name') : '';
+    const val = (nameInput && nameInput.value.trim()) || (this.customPlayerName && this.customPlayerName.trim()) || (stored && stored.trim()) || '';
     const defaultName = window.I18N ? window.I18N.t('player_default') : 'Player';
-    return (nameInput && nameInput.value.trim() ? nameInput.value.trim() : defaultName).substring(0, 14);
+    return (val || defaultName).substring(0, 14);
   }
 
   getSelectedSkinId() {
@@ -2097,7 +2132,7 @@ class WormArenaGame {
       false
     );
     this.player.hat = this.equippedHat;
-    this.player.ghostTimer = 150; // Başlangıç koruması (2.5 sn hasarsızlık)
+    this.player.ghostTimer = 0; // Hayalet modu kaldırıldı: tam görünür ve fiziksel
 
     this.bots = [];
     if (includeBots) {
@@ -2142,7 +2177,7 @@ class WormArenaGame {
     this.player.hat = this.equippedHat;
     this.player.angle = spawnAngle;
     this.player.targetAngle = spawnAngle;
-    this.player.ghostTimer = 150; // Başlangıç koruması (2.5 sn hasarsızlık)
+    this.player.ghostTimer = 0; // Hayalet modu kaldırıldı: tam görünür ve fiziksel
 
     this.bots = [];
     if (includeBots) {
@@ -2161,6 +2196,11 @@ class WormArenaGame {
     if (this.gameOverScreen) {
       this.gameOverScreen.classList.add('hidden');
       this.gameOverScreen.style.display = 'none';
+    }
+    const victoryScreen = document.getElementById('victoryScreen');
+    if (victoryScreen) {
+      victoryScreen.classList.add('hidden');
+      victoryScreen.style.display = 'none';
     }
     const multiplayerModal = document.getElementById('multiplayerModal');
     if (multiplayerModal) {
@@ -2210,7 +2250,7 @@ class WormArenaGame {
     this.player.hat = this.equippedHat;
     this.player.angle = sa;
     this.player.targetAngle = sa;
-    this.player.ghostTimer = 150; // Başlangıç koruması (2.5 sn hasarsızlık)
+    this.player.ghostTimer = 0; // Hayalet modu kaldırıldı: tam görünür ve fiziksel
 
     // Kamerayı anında oyuncunun üzerine getir
     this.camera.x = this.player.x - window.innerWidth / 2;
@@ -2228,6 +2268,11 @@ class WormArenaGame {
     if (this.gameOverScreen) {
       this.gameOverScreen.classList.add('hidden');
       this.gameOverScreen.style.display = 'none';
+    }
+    const victoryModal = document.getElementById('victoryScreen');
+    if (victoryModal) {
+      victoryModal.classList.add('hidden');
+      victoryModal.style.display = 'none';
     }
     const mModal = document.getElementById('multiplayerModal');
     if (mModal) {
@@ -2266,7 +2311,7 @@ class WormArenaGame {
     const bot = new Worm(bx, by, botName, botSkin, true);
     bot.botId = index;
     bot.peerId = `bot_${index}_${Math.floor(Math.random() * 10000)}`;
-    bot.ghostTimer = 150;
+    bot.ghostTimer = 0;
     bot.score = Math.floor(Math.random() * 80) + 30;
     // Botlara da rastgele şapka ver
     if (Math.random() < 0.6) {
@@ -2284,7 +2329,7 @@ class WormArenaGame {
 
   update() {
     // Lobide veya menüdeyken fizik döngüsünü ve tick yayınını kesinlikle çalıştırma!
-    if (this.state !== 'PLAYING' && this.state !== 'DYING' && this.state !== 'GAMEOVER') {
+    if (this.state !== 'PLAYING' && this.state !== 'DYING' && this.state !== 'GAMEOVER' && this.state !== 'VICTORY') {
       return;
     }
     if (!this.player) return;
@@ -2317,6 +2362,27 @@ class WormArenaGame {
         return;
       }
     }
+
+    if (this.state === 'VICTORY') {
+      this.updateParticles();
+      // DİKKAT: Host ise istemcileri güncellemeye devam et
+      if (!this.network.isMultiplayer || !this.network.isHost) {
+        return;
+      }
+    }
+
+    // Dinamik Akıcı Kamera Zoom Sistemi (Yılan Büyüdükçe Kamera Uzaklaşır)
+    let targetZoom = 1.0;
+    if (this.player && !this.player.isDead) {
+      // Skor büyüdükçe kamera pürüzsüzce geniş açıya geçer: devasa yılanın tüm gövdesi ve çevresi ekranda kalır
+      const growth = Math.log10(1 + (this.player.score || 0) / 60);
+      targetZoom = Math.max(0.55, 1.02 - growth * 0.185);
+      if (this.settings && this.settings.cameraZoom === 'wide') {
+        targetZoom *= 0.88;
+      }
+    }
+    if (!this.camera.scale) this.camera.scale = 1.0;
+    this.camera.scale += (targetZoom - this.camera.scale) * 0.05;
 
     // Canlı Etkinlik Kontrolü (Altın Yağmuru Her 80 sn)
     this.eventTimer++;
@@ -2428,6 +2494,19 @@ class WormArenaGame {
         return;
       }
 
+      // 20.000 Puana Ulaşan Oyuncu Kazanır Kuralı (İstemci Kontrolü)
+      const WIN_SCORE = 20000;
+      if (this.player && !this.player.isDead && this.player.score >= WIN_SCORE) {
+        this.handleVictory(this.player);
+        return;
+      }
+      for (const rw of this.network.remotePlayers.values()) {
+        if (rw && !rw.isDead && rw.score >= WIN_SCORE) {
+          this.handleVictory(rw);
+          return;
+        }
+      }
+
       this.camera.x += (this.player.x - window.innerWidth / 2 - this.camera.x) * 0.15;
       this.camera.y += (this.player.y - window.innerHeight / 2 - this.camera.y) * 0.15;
 
@@ -2503,6 +2582,15 @@ class WormArenaGame {
     // Solucan Çarpışmaları (Kafa ve Gövde)
     this.checkWormCollisions(allWorms);
 
+    // 20.000 Puana Ulaşan İlk Oyuncu Oyunu Kazanır Kuralı (Win Condition)
+    const WIN_SCORE = 20000;
+    for (const w of allWorms) {
+      if (w && !w.isDead && w.score >= WIN_SCORE) {
+        this.handleVictory(w);
+        return;
+      }
+    }
+
     // Çok oyunculu sunucu tick yayını (Ölen yılanların yıldızlı yemleri ve yeni yemler eksiksiz yayılır!)
     if (this.network.isMultiplayer && this.network.isHost) {
       this.broadcastTickCounter = (this.broadcastTickCounter || 0) + 1;
@@ -2523,8 +2611,8 @@ class WormArenaGame {
       }
     }
 
-    // Arenada yiyecek yoğunluğunu her zaman yüksek ve sıkı tut (Kullanıcı isteği: 1 kat daha fazla yem)
-    const targetFoodCount = (this.network && this.network.isMultiplayer) ? 2000 : 3500;
+    // Arenada yiyecek yoğunluğu: 60 FPS akıcı performans için optimize edilmiş sıkı yem havuzu
+    const targetFoodCount = (this.network && this.network.isMultiplayer) ? 1200 : 1800;
     if (this.foods.length < targetFoodCount && (!this.network || !this.network.isMultiplayer || this.network.isHost)) {
       const spawnBatch = Math.min(6, targetFoodCount - this.foods.length);
       for (let k = 0; k < spawnBatch; k++) {
@@ -2551,11 +2639,6 @@ class WormArenaGame {
       this.hudPowerupIcon.textContent = '🧲';
       const label = window.I18N ? window.I18N.t('hud_powerup_magnet') : 'MAGNET';
       this.hudPowerupText.textContent = `${label} (${Math.ceil(this.player.magnetTimer / 60)}s)`;
-    } else if (this.player.ghostTimer > 0) {
-      this.hudPowerupBadge.classList.remove('hidden');
-      this.hudPowerupIcon.textContent = '👻';
-      const label = window.I18N ? window.I18N.t('hud_powerup_ghost') : 'GHOST';
-      this.hudPowerupText.textContent = `${label} (${Math.ceil(this.player.ghostTimer / 60)}s)`;
     } else if (this.player.doublePointsTimer > 0) {
       this.hudPowerupBadge.classList.remove('hidden');
       this.hudPowerupIcon.textContent = '2️⃣';
@@ -2607,9 +2690,15 @@ class WormArenaGame {
       const segDx = worm.x - prevX;
       const segDy = worm.y - prevY;
       const segLenSq = segDx * segDx + segDy * segDy;
+      const maxReach = worm.magnetTimer > 0 ? 170 : (baseEatRadius + 20);
 
       for (let i = this.foods.length - 1; i >= 0; i--) {
         const food = this.foods[i];
+
+        // 60 FPS Hızlı Eleme: Yılan kafasından uzaktaki yemleri doğrudan atla (Kasmayı %100 bitirir)
+        if (Math.abs(food.x - worm.x) > maxReach || Math.abs(food.y - worm.y) > maxReach) {
+          continue;
+        }
 
         // 1. Ağız / Burun ucu mesafesi
         const sdx = food.x - snoutX;
@@ -2645,9 +2734,9 @@ class WormArenaGame {
           if (food.type === 'magnet') {
             worm.magnetTimer = 500;
             if (worm === this.player) sounds.playMagnet();
-          } else if (food.type === 'ghost') {
-            worm.ghostTimer = 400;
-            if (worm === this.player) sounds.playGhost();
+          } else if (food.type === 'energy_star' || food.type === 'ghost') {
+            worm.doublePointsTimer = 400;
+            if (worm === this.player) sounds.playSpecial();
           } else if (food.type === 'double') {
             worm.doublePointsTimer = 500;
             if (worm === this.player) sounds.playSpecial();
@@ -2661,7 +2750,7 @@ class WormArenaGame {
               this.vibrate(20);
               this.checkQuestProgress('collect_gold', 1);
             }
-            if (food.type === 'magnet' || food.type === 'ghost' || food.type === 'double') {
+            if (food.type === 'magnet' || food.type === 'energy_star' || food.type === 'ghost' || food.type === 'double') {
               this.checkQuestProgress('collect_powerup', 1);
             }
             this.checkQuestProgress('reach_score', Math.floor(this.player.score));
@@ -2694,11 +2783,17 @@ class WormArenaGame {
 
     for (let i = 0; i < allWorms.length; i++) {
       const attacker = allWorms[i];
-      if (attacker.isDead || attacker.ghostTimer > 0) continue;
+      if (attacker.isDead) continue;
 
       for (let j = 0; j < allWorms.length; j++) {
         const victim = allWorms[j];
-        if (attacker === victim || victim.isDead || victim.ghostTimer > 0) continue;
+        if (attacker === victim || victim.isDead) continue;
+
+        // 60 FPS Yılan Seviyesi Hızlı Eleme: Birbirinden uzak yılanların gövde segment döngüsünü tamamen atla
+        const victimSpan = (victim.body.length * 6.5) + victim.radius + attacker.radius + 60;
+        if (Math.abs(attacker.x - victim.x) > victimSpan || Math.abs(attacker.y - victim.y) > victimSpan) {
+          continue;
+        }
 
         // 1. Kafa-Gövde Çarpışması: Bir solucanın kafası diğer solucanın herhangi bir yerine (boyun, gövde, kuyruk) temas ettiğinde anında ezilir!
         const vPoints = [{ x: victim.x, y: victim.y }, ...victim.body];
@@ -2917,7 +3012,11 @@ class WormArenaGame {
 
         if (killedByEl) {
           const killerName = killedBy || (window.I18N ? window.I18N.t('an_obstacle') : 'an obstacle');
-          killedByEl.textContent = window.I18N ? window.I18N.t('gameover_killed_by', { killer: killerName }) : `You crashed into ${killerName}! 🍭`;
+          let text = window.I18N ? window.I18N.t('gameover_killed_by', { killer: killerName }) : `You crashed into ${killerName}! 🍭`;
+          if (text.includes('{killer}')) {
+            text = text.replace(/\{killer\}/g, killerName);
+          }
+          killedByEl.textContent = text;
         }
         if (earnedCoinsEl) earnedCoinsEl.textContent = earnedCoins;
         if (finalScoreEl) finalScoreEl.textContent = Math.floor(this.player.score);
@@ -3002,8 +3101,97 @@ class WormArenaGame {
     }
   }
 
+  createVictoryConfetti(x, y) {
+    const colors = ['#ffd700', '#ff007f', '#00f0ff', '#00ff88', '#ff7700', '#ffffff'];
+    for (let i = 0; i < 90; i++) {
+      this.particles.push({
+        x: x + (Math.random() - 0.5) * 140,
+        y: y + (Math.random() - 0.5) * 140,
+        vx: (Math.random() - 0.5) * 16,
+        vy: (Math.random() - 0.5) * 16 - 3,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        alpha: 1,
+        size: Math.random() * 6 + 4
+      });
+    }
+  }
+
+  handleVictory(winner) {
+    if (this.state === 'VICTORY') return;
+    this.state = 'VICTORY';
+
+    const isLocalWinner = (winner === this.player) || (this.player && winner && (winner.peerId === this.network.myPeerId || winner.name === this.player.name));
+
+    // Zafer Kutlama Sesi & Konfeti Patlaması
+    if (sounds && sounds.playVictory) {
+      sounds.playVictory();
+    } else if (sounds && sounds.playWheelWin) {
+      sounds.playWheelWin();
+    }
+    const px = winner ? winner.x : (this.player ? this.player.x : this.worldWidth / 2);
+    const py = winner ? winner.y : (this.player ? this.player.y : this.worldHeight / 2);
+    this.createVictoryConfetti(px, py);
+
+    // Host ise: Tüm bağlı istemcilere 20.000 zafer paketini ilet
+    if (this.network && this.network.isMultiplayer && this.network.isHost && this.network.broadcastVictory) {
+      this.network.broadcastVictory(
+        winner ? winner.name : 'Champion',
+        winner ? winner.peerId : null,
+        winner ? winner.score : 20000,
+        winner ? winner.kills : 0
+      );
+    }
+
+    if (this.joystickZone) this.joystickZone.classList.add('hidden');
+    if (this.gameOverScreen) {
+      this.gameOverScreen.classList.add('hidden');
+      this.gameOverScreen.style.display = 'none';
+    }
+
+    const victoryScreen = document.getElementById('victoryScreen');
+    const victoryTitle = document.getElementById('victoryTitle');
+    const victorySubtitle = document.getElementById('victorySubtitle');
+    const victoryWinnerName = document.getElementById('victoryWinnerName');
+    const victoryScoreVal = document.getElementById('victoryScoreVal');
+    const victoryKillsVal = document.getElementById('victoryKillsVal');
+    const victoryBonusBox = document.getElementById('victoryBonusBox');
+
+    const winnerName = (winner && winner.name) ? winner.name : (isLocalWinner ? this.getPlayerName() : (window.I18N ? window.I18N.t('player_default') : 'Champion'));
+    const winnerScore = (winner && typeof winner.score === 'number') ? winner.score : 20000;
+    const winnerKills = (winner && typeof winner.kills === 'number') ? winner.kills : (this.player ? this.player.kills : 0);
+
+    if (victoryWinnerName) victoryWinnerName.textContent = winnerName;
+    if (victoryScoreVal) victoryScoreVal.textContent = winnerScore.toLocaleString();
+    if (victoryKillsVal) victoryKillsVal.textContent = winnerKills;
+
+    if (isLocalWinner) {
+      if (victoryTitle) victoryTitle.textContent = window.I18N ? window.I18N.t('victory_title') : 'ARENA ŞAMPİYONU!';
+      if (victorySubtitle) victorySubtitle.textContent = window.I18N ? window.I18N.t('victory_subtitle') : '20.000 puana ulaşarak arenayı fethettin! Harika bir zafer! 🎉';
+      if (victoryBonusBox) victoryBonusBox.style.display = 'flex';
+      // +500 Altın Şampiyonluk Ödülü Hesaba Eklenir!
+      this.addCoins(500);
+      if (window.I18N) {
+        this.showToast(window.I18N.t('toast_congrats'), '+500 🪙 ' + window.I18N.t('stat_bonus_label'), '👑');
+      }
+    } else {
+      if (victoryTitle) victoryTitle.textContent = window.I18N ? window.I18N.t('victory_match_finished') : 'MAÇ SONA ERDİ!';
+      const subTemplate = window.I18N ? window.I18N.t('victory_winner_other') : '{winner} 20.000 puana ulaşarak maçı kazandı!';
+      if (victorySubtitle) victorySubtitle.textContent = subTemplate.replace('{winner}', winnerName);
+      if (victoryBonusBox) victoryBonusBox.style.display = 'none';
+    }
+
+    if (victoryScreen) {
+      victoryScreen.classList.remove('hidden');
+      victoryScreen.style.display = 'flex';
+    }
+  }
+
   returnToMenu() {
     this.state = 'START';
+    if (this.network && this.network.roomCode) {
+      this.lastRoomCode = this.network.roomCode;
+      try { localStorage.setItem('worm_last_room_code', this.network.roomCode); } catch (e) {}
+    }
     if (this.network) {
       try { this.network.disconnect(); } catch (e) {}
     }
@@ -3033,6 +3221,12 @@ class WormArenaGame {
     if (this.gameOverScreen) {
       this.gameOverScreen.classList.add('hidden');
       this.gameOverScreen.style.display = 'none';
+    }
+
+    const victoryScreen = document.getElementById('victoryScreen');
+    if (victoryScreen) {
+      victoryScreen.classList.add('hidden');
+      victoryScreen.style.display = 'none';
     }
 
     if (this.joystickZone) {
@@ -3891,7 +4085,7 @@ class WormArenaGame {
       return;
     }
 
-    const zoom = (this.settings && this.settings.cameraZoom === 'wide') ? 0.85 : 1.0;
+    const zoom = this.camera.scale || 1.0;
     this.ctx.save();
     if (zoom !== 1.0) {
       this.ctx.translate(w / 2, h / 2);
@@ -3936,42 +4130,52 @@ class WormArenaGame {
   drawArenaPattern(w, h) {
     const cols = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
     const sectorSize = this.worldWidth / 8; // 8x8 Satranç karesi: her kare 800x800 piksel
+    const zoom = (this.camera && this.camera.scale) ? this.camera.scale : 1.0;
+    const extraW = Math.max(0, (w / zoom - w) / 2);
+    const extraH = Math.max(0, (h / zoom - h) / 2);
 
     // 1. İnce Arka Plan Kareleri (90px)
     const tileSize = 90;
-    const startX = Math.floor(this.camera.x / tileSize) * tileSize;
-    const startY = Math.floor(this.camera.y / tileSize) * tileSize;
+    const startX = Math.floor((this.camera.x - extraW) / tileSize) * tileSize;
+    const startY = Math.floor((this.camera.y - extraH) / tileSize) * tileSize;
+    const endX = this.camera.x + w + extraW + tileSize;
+    const endY = this.camera.y + h + extraH + tileSize;
+
+    const lineTop = -extraH - 50;
+    const lineBottom = h + extraH + 50;
+    const lineLeft = -extraW - 50;
+    const lineRight = w + extraW + 50;
 
     this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.025)';
     this.ctx.lineWidth = 1;
     this.ctx.beginPath();
-    for (let x = startX - tileSize; x < startX + w + tileSize; x += tileSize) {
+    for (let x = startX; x <= endX; x += tileSize) {
       const sx = x - this.camera.x;
-      this.ctx.moveTo(sx, 0); this.ctx.lineTo(sx, h);
+      this.ctx.moveTo(sx, lineTop); this.ctx.lineTo(sx, lineBottom);
     }
-    for (let y = startY - tileSize; y < startY + h + tileSize; y += tileSize) {
+    for (let y = startY; y <= endY; y += tileSize) {
       const sy = y - this.camera.y;
-      this.ctx.moveTo(0, sy); this.ctx.lineTo(w, sy);
+      this.ctx.moveTo(lineLeft, sy); this.ctx.lineTo(lineRight, sy);
     }
     this.ctx.stroke();
 
     // 2. Satranç Tahtası Sektör Çizgileri (Her 800px'te belirgin neon hat)
-    const secStartX = Math.floor(this.camera.x / sectorSize) * sectorSize;
-    const secStartY = Math.floor(this.camera.y / sectorSize) * sectorSize;
+    const secStartX = Math.floor((this.camera.x - extraW) / sectorSize) * sectorSize;
+    const secStartY = Math.floor((this.camera.y - extraH) / sectorSize) * sectorSize;
 
     this.ctx.strokeStyle = 'rgba(0, 240, 255, 0.12)';
     this.ctx.lineWidth = 2;
     this.ctx.beginPath();
-    for (let x = secStartX; x <= secStartX + w + sectorSize; x += sectorSize) {
+    for (let x = secStartX; x <= endX; x += sectorSize) {
       if (x >= 0 && x <= this.worldWidth) {
         const sx = x - this.camera.x;
-        this.ctx.moveTo(sx, 0); this.ctx.lineTo(sx, h);
+        this.ctx.moveTo(sx, lineTop); this.ctx.lineTo(sx, lineBottom);
       }
     }
-    for (let y = secStartY; y <= secStartY + h + sectorSize; y += sectorSize) {
+    for (let y = secStartY; y <= endY; y += sectorSize) {
       if (y >= 0 && y <= this.worldHeight) {
         const sy = y - this.camera.y;
-        this.ctx.moveTo(0, sy); this.ctx.lineTo(w, sy);
+        this.ctx.moveTo(lineLeft, sy); this.ctx.lineTo(lineRight, sy);
       }
     }
     this.ctx.stroke();
@@ -3981,10 +4185,10 @@ class WormArenaGame {
     this.ctx.textAlign = 'center';
     this.ctx.textBaseline = 'middle';
 
-    const minCol = Math.max(0, Math.floor((this.camera.x - 200) / sectorSize));
-    const maxCol = Math.min(7, Math.floor((this.camera.x + w + 200) / sectorSize));
-    const minRow = Math.max(0, Math.floor((this.camera.y - 200) / sectorSize));
-    const maxRow = Math.min(7, Math.floor((this.camera.y + h + 200) / sectorSize));
+    const minCol = Math.max(0, Math.floor((this.camera.x - extraW - 200) / sectorSize));
+    const maxCol = Math.min(7, Math.floor((this.camera.x + w + extraW + 200) / sectorSize));
+    const minRow = Math.max(0, Math.floor((this.camera.y - extraH - 200) / sectorSize));
+    const maxRow = Math.min(7, Math.floor((this.camera.y + h + extraH + 200) / sectorSize));
 
     for (let c = minCol; c <= maxCol; c++) {
       for (let r = minRow; r <= maxRow; r++) {
@@ -4063,6 +4267,14 @@ class WormArenaGame {
     const camX = this.camera.x;
     const camY = this.camera.y;
 
+    const zoom = (this.camera && this.camera.scale) ? this.camera.scale : 1.0;
+    const halfW = (w / 2) / zoom;
+    const halfH = (h / 2) / zoom;
+    const minX = w / 2 - halfW - 40;
+    const maxX = w / 2 + halfW + 40;
+    const minY = h / 2 - halfH - 40;
+    const maxY = h / 2 + halfH + 40;
+
     this.ctx.textAlign = 'center';
     this.ctx.textBaseline = 'middle';
     this.ctx.font = '18px sans-serif';
@@ -4075,25 +4287,14 @@ class WormArenaGame {
       const sx = f.x - camX;
       const sy = f.y - camY;
 
-      if (sx < -25 || sx > w + 25 || sy < -25 || sy > h + 25) continue;
+      if (sx < minX || sx > maxX || sy < minY || sy > maxY) continue;
 
       if (f.type === 'star_coin') {
-        // Yıldızlı Yemekler: Parıldayan altın haleli şık görünüm
-        this.ctx.save();
-        this.ctx.shadowBlur = 10;
-        this.ctx.shadowColor = '#ffd700';
         this.ctx.font = '22px sans-serif';
         this.ctx.fillText(f.icon, sx, sy);
-        this.ctx.restore();
-        this.ctx.font = '18px sans-serif';
       } else if (f.isPowerup) {
-        this.ctx.save();
-        this.ctx.shadowBlur = 10;
-        this.ctx.shadowColor = f.color;
         this.ctx.font = '24px sans-serif';
         this.ctx.fillText(f.icon, sx, sy);
-        this.ctx.restore();
-        this.ctx.font = '18px sans-serif';
       } else {
         // Normal yemler: Gölgesiz, doğrudan hızlı çizim (0 kasma)
         this.ctx.fillText(f.icon, sx, sy);
@@ -4199,8 +4400,6 @@ class WormArenaGame {
 
       if (!worm.isBot) {
         // Arkadaş / Gerçek Oyuncu (Canlı Mavi/Turkuaz)
-        this.minimapCtx.shadowBlur = 6;
-        this.minimapCtx.shadowColor = '#00f0ff';
         this.minimapCtx.fillStyle = '#00f0ff';
         this.minimapCtx.beginPath();
         this.minimapCtx.arc(mx, my, 4.2, 0, Math.PI * 2);
@@ -4208,11 +4407,8 @@ class WormArenaGame {
         this.minimapCtx.strokeStyle = '#ffffff';
         this.minimapCtx.lineWidth = 1.2;
         this.minimapCtx.stroke();
-        this.minimapCtx.shadowBlur = 0;
       } else {
         // Bot Yılanlar (Göz Alıcı Parlak Turuncu / Kırmızı Nokta)
-        this.minimapCtx.shadowBlur = 5;
-        this.minimapCtx.shadowColor = '#ff5500';
         this.minimapCtx.fillStyle = '#ff7700';
         this.minimapCtx.beginPath();
         this.minimapCtx.arc(mx, my, 3.8, 0, Math.PI * 2);
@@ -4220,7 +4416,6 @@ class WormArenaGame {
         this.minimapCtx.strokeStyle = '#ffdd00';
         this.minimapCtx.lineWidth = 1;
         this.minimapCtx.stroke();
-        this.minimapCtx.shadowBlur = 0;
       }
     }
 
@@ -4229,11 +4424,8 @@ class WormArenaGame {
       const pmx = Math.max(5, Math.min(mw - 5, this.player.x * scaleX));
       const pmy = Math.max(5, Math.min(mh - 5, this.player.y * scaleY));
 
-      this.minimapCtx.shadowBlur = 8;
-      this.minimapCtx.shadowColor = '#00ff88';
-
       // Dış Halka (Radar Nabız)
-      this.minimapCtx.strokeStyle = 'rgba(0, 255, 136, 0.4)';
+      this.minimapCtx.strokeStyle = 'rgba(0, 255, 136, 0.6)';
       this.minimapCtx.lineWidth = 1.5;
       this.minimapCtx.beginPath();
       this.minimapCtx.arc(pmx, pmy, 7, 0, Math.PI * 2);
@@ -4602,7 +4794,7 @@ class WormArenaGame {
         }
         renderLobbyPlayers(this.network.getLobbyList(), roomCode);
 
-        if (!this.network.isHost || !this.network.peer || this.network.peer.destroyed || this.network.peer.disconnected) {
+        if (!this.network.isHost || !this.network.peer || this.network.peer.destroyed || this.network.peer.disconnected || this.network.roomCode !== roomCode) {
           this.network.createRoom(roomCode).then(code => {
             if (myRoomCodeEl) myRoomCodeEl.textContent = code;
             if (roomLinkInput) roomLinkInput.value = this.getInviteLink(code);
@@ -4751,7 +4943,7 @@ class WormArenaGame {
         const roomLinkInput = document.getElementById('roomLinkInput');
         if (roomLinkInput) roomLinkInput.value = this.getInviteLink(roomCode);
 
-        if (!this.network.isHost || !this.network.peer || this.network.peer.destroyed || this.network.peer.disconnected) {
+        if (!this.network.isHost || !this.network.peer || this.network.peer.destroyed || this.network.peer.disconnected || this.network.roomCode !== roomCode) {
           if (lobbyStatusBadge) {
             lobbyStatusBadge.textContent = window.I18N ? window.I18N.t('mp_lobby_status_connecting') : '🟡 Connecting...';
             lobbyStatusBadge.className = 'lobby-live-badge waiting';
@@ -4794,6 +4986,10 @@ class WormArenaGame {
         if (joinPlayerNameInput) {
           joinPlayerNameInput.value = this.getPlayerName();
         }
+        const savedRoomCode = this.lastRoomCode || localStorage.getItem('worm_last_room_code') || '';
+        if (joinRoomCodeInput && !joinRoomCodeInput.value && savedRoomCode) {
+          joinRoomCodeInput.value = savedRoomCode;
+        }
       });
     }
 
@@ -4812,15 +5008,9 @@ class WormArenaGame {
         const joinPlayerNameInput = document.getElementById('joinPlayerNameInput');
         let customName = joinPlayerNameInput ? joinPlayerNameInput.value.trim() : '';
 
-        // İsim zorunlu: Kullanıcı isim yazmadan odaya katılamaz!
-        if (!customName || customName.length < 2 || customName.startsWith('Player_') || customName.startsWith('Oyuncu_')) {
-          joinStatusMsg.textContent = window.I18N ? window.I18N.t('mp_err_name_required') : '⚠️ Please enter your player name! Cannot join without a name.';
-          if (joinPlayerNameInput) {
-            joinPlayerNameInput.focus();
-            joinPlayerNameInput.classList.add('input-error-shake');
-            setTimeout(() => joinPlayerNameInput.classList.remove('input-error-shake'), 500);
-          }
-          return;
+        // İsim kontrolü: Kullanıcı adı boşsa varsayılan adı ata, isim kısıtlaması yapma (herkes hızlıca katılabilsin)
+        if (!customName || customName.length < 1) {
+          customName = this.getPlayerName() || (window.I18N ? window.I18N.t('player_default') : 'Player');
         }
         if (joinPlayerNameInput) joinPlayerNameInput.value = customName;
 
@@ -4835,6 +5025,10 @@ class WormArenaGame {
           joinStatusMsg.textContent = window.I18N ? window.I18N.t('mp_err_code_required') : '⚠️ Please enter the 4-digit room code!';
           return;
         }
+
+        // Son katıldığı odayı hafızaya al (kullanıcı ana menüye çıksa dahi tekrar katılabilsin)
+        this.lastRoomCode = code;
+        try { localStorage.setItem('worm_last_room_code', code); } catch (e) {}
 
         // Eğer önceden oda kurduysa onu iptal et, temiz istemci olarak bağlan
         if (this.network.isHost) {
@@ -4868,11 +5062,11 @@ class WormArenaGame {
             <li class="lobby-item">
               <span class="lobby-player-icon">🟢</span>
               <span class="lobby-player-name">${this.escapeHtml(customName)} (${youText})</span>
-              <span class="lobby-ready-badge">${connectingBadge}</span>
+              <span class="lobby-ready-badge" id="myLobbyBadge">${connectingBadge}</span>
             </li>
           `;
         }
-        if (clientLobbyCount) clientLobbyCount.textContent = '2';
+        if (clientLobbyCount) clientLobbyCount.textContent = '...';
 
         joinStatusMsg.textContent = '';
         joinRoomSubmitBtn.disabled = true;
@@ -4909,11 +5103,53 @@ class WormArenaGame {
   }
 
   initEvents() {
-    window.addEventListener('resize', () => this.initCanvasSize());
+    window.addEventListener('resize', () => {
+      this.initCanvasSize();
+      this.applyBoostPosition();
+    });
+    window.addEventListener('orientationchange', () => {
+      setTimeout(() => {
+        this.initCanvasSize();
+        this.applyBoostPosition();
+      }, 150);
+    });
+
+    // UI Elemanlarına dokunma / tıklama tespiti (Yılanın UI butonlarına doğru yönlenmesini kesin engeller)
+    const isUiTouch = (clientX, clientY) => {
+      if (typeof clientX !== 'number' || typeof clientY !== 'number') return false;
+      try {
+        const el = document.elementFromPoint(clientX, clientY);
+        if (el && el.closest('.boost-control-container, .hud-top, .in-game-emotes, .emote-bubble-btn, .minimap-container, button, .modal-backdrop, .modal-dialog, .game-toast-container, .event-banner')) {
+          return true;
+        }
+      } catch (err) {}
+
+      // Ekstra Güvenlik: UI kapsayıcılarının koordinat sınırlarını kontrol et
+      const checkRect = (selector, padding = 10) => {
+        const elem = document.querySelector(selector);
+        if (!elem) return false;
+        const rect = elem.getBoundingClientRect();
+        return (
+          clientX >= rect.left - padding &&
+          clientX <= rect.right + padding &&
+          clientY >= rect.top - padding &&
+          clientY <= rect.bottom + padding
+        );
+      };
+
+      if (checkRect('#inGameEmotes', 12)) return true;
+      if (checkRect('.boost-control-container', 12)) return true;
+      if (checkRect('.minimap-container', 8)) return true;
+      if (checkRect('.hud-top', 6)) return true;
+
+      return false;
+    };
 
     // Farenin veya ekran noktasının yılanın kafasına göre 360° hedefini belirle (Slither.io / Wormate tarzı)
     const updateSteeringFromScreenPos = (clientX, clientY) => {
       if (!this.player || (this.state !== 'PLAYING' && this.state !== 'DYING')) return;
+      // UI elemanlarına (emojiler, butonlar, harita) tıklandığında veya dokunulduğunda yılanın o yöne gitmesini kesinlikle engelle!
+      if (isUiTouch(clientX, clientY)) return;
 
       const playerScreenX = this.player.x - this.camera.x;
       const playerScreenY = this.player.y - this.camera.y;
@@ -4959,6 +5195,7 @@ class WormArenaGame {
     let activeJoystickTouchId = null;
 
     const startJoystickAt = (clientX, clientY, touchId) => {
+      if (isUiTouch(clientX, clientY)) return;
       activeJoystickTouchId = touchId;
       this.joystick.active = true;
 
@@ -5036,11 +5273,6 @@ class WormArenaGame {
     };
 
     // ==================== DOKUNMATİK ETKİNLİKLERİ (TOUCH EVENTS - MOBİL) ====================
-    const isUiTouch = (clientX, clientY) => {
-      const el = document.elementFromPoint(clientX, clientY);
-      return !!(el && el.closest('.boost-control-container, .hud-top, .in-game-emotes, .minimap-container, button, .modal-backdrop, .modal-dialog'));
-    };
-
     const handleTouchStart = (e) => {
       if (this.state !== 'PLAYING') return;
 
@@ -5095,8 +5327,9 @@ class WormArenaGame {
 
     // ==================== FARE KONTROLLERİ (MOUSE EVENTS - TARAYICI & MASAÜSTÜ) ====================
     window.addEventListener('mousemove', (e) => {
-      // Eğer mobilde dokunmatik joystick aktifse fare hareketini yoksay
+      // Eğer mobilde dokunmatik joystick aktifse veya UI elemanına dokunuluyorsa yılanın yönünü bozma
       if (activeJoystickTouchId !== null || this.state !== 'PLAYING' || !this.player) return;
+      if (isUiTouch(e.clientX, e.clientY)) return;
       updateSteeringFromScreenPos(e.clientX, e.clientY);
     });
 
@@ -5145,11 +5378,51 @@ class WormArenaGame {
       }
     });
 
-    // Oyun İçi Emoji Tepki Butonları
+    // Oyun İçi Emoji Tepki Butonları (Dokunulduğunda veya tıklandığında yılan ASLA butonun olduğu yere yönlenmez!)
+    const inGameEmotes = document.getElementById('inGameEmotes');
+    if (inGameEmotes) {
+      const stopAll = (e) => {
+        if (e) {
+          e.stopPropagation();
+        }
+      };
+      inGameEmotes.addEventListener('touchstart', (e) => { e.stopPropagation(); }, { passive: false });
+      inGameEmotes.addEventListener('touchmove', (e) => { e.preventDefault(); e.stopPropagation(); }, { passive: false });
+      inGameEmotes.addEventListener('touchend', (e) => { e.stopPropagation(); }, { passive: false });
+      inGameEmotes.addEventListener('pointerdown', stopAll);
+      inGameEmotes.addEventListener('pointermove', stopAll);
+      inGameEmotes.addEventListener('pointerup', stopAll);
+      inGameEmotes.addEventListener('mousedown', stopAll);
+    }
+
     document.querySelectorAll('.emote-bubble-btn').forEach(btn => {
+      const triggerEmote = (e) => {
+        if (e) {
+          if (e.cancelable) e.preventDefault();
+          e.stopPropagation();
+        }
+        const emoji = btn.dataset.emote;
+        if (emoji) {
+          this.sendEmote(emoji);
+        }
+      };
+
+      btn.addEventListener('touchstart', (e) => {
+        triggerEmote(e);
+      }, { passive: false });
+      btn.addEventListener('touchmove', (e) => {
+        if (e && e.cancelable) e.preventDefault();
+        if (e) e.stopPropagation();
+      }, { passive: false });
+      btn.addEventListener('touchend', (e) => {
+        if (e) e.stopPropagation();
+      }, { passive: false });
+      btn.addEventListener('pointerdown', (e) => { e.stopPropagation(); });
+      btn.addEventListener('pointermove', (e) => { e.stopPropagation(); });
+      btn.addEventListener('pointerup', (e) => { e.stopPropagation(); });
+      btn.addEventListener('mousedown', (e) => { e.stopPropagation(); });
       btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        this.sendEmote(btn.dataset.emote);
+        triggerEmote(e);
       });
     });
 
@@ -5172,7 +5445,7 @@ class WormArenaGame {
           const ry = Math.round(this.worldHeight / 2 + (Math.random() - 0.5) * 600);
           this.player = new Worm(rx, ry, this.getPlayerName(), skin, false);
           this.player.peerId = 'host';
-          this.player.ghostTimer = 150;
+          this.player.ghostTimer = 0;
           this.player.hat = this.equippedHat;
           this.gameOverScreen.classList.add('hidden');
           if (this.joystickZone) this.joystickZone.classList.remove('hidden');
@@ -5204,6 +5477,51 @@ class WormArenaGame {
     const closeGameOverBtn = document.getElementById('closeGameOverBtn');
     if (closeGameOverBtn) {
       closeGameOverBtn.addEventListener('click', () => {
+        if (this.network && this.network.isMultiplayer) {
+          this.network.disconnect();
+        }
+        this.returnToMenu();
+      });
+    }
+
+    // Zafer Ekranı Butonları (20.000 Puan Şampiyonluk)
+    const victoryPlayAgainBtn = document.getElementById('victoryPlayAgainBtn');
+    if (victoryPlayAgainBtn) {
+      victoryPlayAgainBtn.addEventListener('click', () => {
+        const victoryScreen = document.getElementById('victoryScreen');
+        if (victoryScreen) {
+          victoryScreen.classList.add('hidden');
+          victoryScreen.style.display = 'none';
+        }
+        if (this.network && this.network.isMultiplayer) {
+          if (this.network.isHost) {
+            this.network.startRoomGame();
+          } else {
+            if (this.network.hostConn && this.network.isConnReady(this.network.hostConn)) {
+              this.network.hostConn.send({ type: 'PLAYER_RESPAWN' });
+            } else {
+              this.startGame(true);
+            }
+          }
+        } else {
+          this.startGame(true);
+        }
+      });
+    }
+
+    const victoryHomeBtn = document.getElementById('victoryHomeBtn');
+    if (victoryHomeBtn) {
+      victoryHomeBtn.addEventListener('click', () => {
+        if (this.network && this.network.isMultiplayer) {
+          this.network.disconnect();
+        }
+        this.returnToMenu();
+      });
+    }
+
+    const closeVictoryBtn = document.getElementById('closeVictoryBtn');
+    if (closeVictoryBtn) {
+      closeVictoryBtn.addEventListener('click', () => {
         if (this.network && this.network.isMultiplayer) {
           this.network.disconnect();
         }
@@ -5328,13 +5646,30 @@ class WormArenaGame {
     return `${defaultPublicUrl}/?oda=${code}`;
   }
 
-  // Sayfa açıldığında URL parametresinde (?oda=8532) varsa ÖNCE kullanıcıdan ismini iste, sonra Bekleme Odasına Bağlan
+  // Sayfa açıldığında URL parametresinde (?oda=8532 veya #oda=8532 veya #8532) varsa ÖNCE kullanıcıdan ismini iste, sonra Bekleme Odasına Bağlan
   checkUrlRoomInvite() {
     try {
-      const params = new URLSearchParams(window.location.search);
-      const roomCode = params.get('oda') || params.get('room');
-      if (roomCode && roomCode.trim().length > 0) {
-        const cleanCode = roomCode.trim();
+      let roomCode = null;
+      if (typeof window !== 'undefined') {
+        if (window.location.search) {
+          const params = new URLSearchParams(window.location.search);
+          roomCode = params.get('oda') || params.get('room') || params.get('code');
+        }
+        if (!roomCode && window.location.hash) {
+          const rawHash = window.location.hash.replace(/^#\/?/, '').trim();
+          if (rawHash) {
+            const hashParams = new URLSearchParams(rawHash);
+            roomCode = hashParams.get('oda') || hashParams.get('room') || hashParams.get('code');
+            if (!roomCode && /^[0-9a-zA-Z]{4,6}$/.test(rawHash)) {
+              roomCode = rawHash;
+            }
+          }
+        }
+      }
+
+      if (roomCode && String(roomCode).trim().length > 0) {
+        const cleanCode = String(roomCode).trim().replace(/[^0-9a-zA-Z]/g, '');
+        if (!cleanCode) return;
 
         const inviteModal = document.getElementById('inviteNameModal');
         const inviteBadge = document.getElementById('inviteModalRoomBadge');
@@ -5345,8 +5680,8 @@ class WormArenaGame {
         if (inviteBadge) inviteBadge.textContent = `#${cleanCode}`;
 
         // Kayıtlı geçerli bir isim varsa doldur, ama varsayılan Oyuncu_XXX ise boş bırak ki isim yazmaya zorlasın
-        let existingName = localStorage.getItem('worm_player_name') || '';
-        if (existingName.startsWith('Oyuncu_')) {
+        let existingName = (typeof localStorage !== 'undefined' ? localStorage.getItem('worm_player_name') : '') || '';
+        if (existingName.startsWith('Oyuncu_') || existingName.startsWith('Player_')) {
           existingName = '';
         }
         if (inviteInput) {
@@ -5375,7 +5710,13 @@ class WormArenaGame {
           }
 
           // Geçerli isim yazıldı, kaydet
-          localStorage.setItem('worm_player_name', typedName);
+          this.customPlayerName = typedName;
+          if (this.network) {
+            this.network.customPlayerName = typedName;
+          }
+          if (typeof localStorage !== 'undefined') {
+            localStorage.setItem('worm_player_name', typedName);
+          }
           const mainNameInput = document.getElementById('playerNameInput');
           if (mainNameInput) mainNameInput.value = typedName;
           const joinPlayerNameInput = document.getElementById('joinPlayerNameInput');
@@ -5416,6 +5757,11 @@ class WormArenaGame {
 
   // İsim girildikten sonra bekleme odasını açıp odaya bağlanma
   connectToInviteRoom(cleanCode, playerName) {
+    this.customPlayerName = playerName;
+    if (this.network) {
+      this.network.customPlayerName = playerName;
+    }
+
     const tryJoin = (attempts = 0) => {
       if (typeof Peer === 'undefined' && attempts < 30) {
         setTimeout(() => tryJoin(attempts + 1), 200);
@@ -5469,7 +5815,7 @@ class WormArenaGame {
           </li>
         `;
       }
-      if (clientLobbyCount) clientLobbyCount.textContent = '2';
+      if (clientLobbyCount) clientLobbyCount.textContent = '...';
 
       if (window.showInGameAlert) {
         const title = window.I18N ? window.I18N.t('alert_connecting_room_title') : '🎮 JOINING ROOM';

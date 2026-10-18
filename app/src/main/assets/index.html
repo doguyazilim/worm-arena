@@ -101,6 +101,11 @@
         </ol>
       </div>
 
+      <!-- Center Target Goal Banner (Top Center - Sleek Neon Badge) -->
+      <div class="hud-center-goal" id="hudCenterGoal">
+        <div class="goal-pill" id="targetScoreBadge" data-i18n="target_score_badge" title="First to 20,000 wins!">🎯 HEDEF: 20K</div>
+      </div>
+
       <!-- Right Cluster: Quick Controls & Compact Stats -->
       <div class="hud-right-cluster">
         <!-- Quick Actions (Top Right - Always Visible) -->
@@ -114,16 +119,8 @@
           </button>
         </div>
 
-        <!-- Player Stats (Compact) -->
+        <!-- Player Stats (Sıra, Puan, Leş - Her Zaman Tek Satır) -->
         <div class="player-stats-card">
-          <div class="stat-pill room-badge hidden" id="hudRoomBadge">
-            <span class="stat-icon">👥</span>
-            <span class="stat-text"><b id="hudRoomCode">----</b></span>
-          </div>
-          <div class="stat-pill powerup-active-pill hidden" id="hudPowerupBadge">
-            <span class="stat-icon" id="hudPowerupIcon">🧲</span>
-            <span class="stat-text" id="hudPowerupText" data-i18n="hud_powerup_magnet">MAGNET</span>
-          </div>
           <div class="stat-pill">
             <span class="stat-icon">👑</span>
             <span class="stat-text"><b id="playerRank">#1</b>/<span id="totalPlayersCount">10</span></span>
@@ -135,6 +132,18 @@
           <div class="stat-pill highlight-red">
             <span class="stat-icon">💀</span>
             <span class="stat-text"><b id="playerKills">0</b></span>
+          </div>
+        </div>
+
+        <!-- Aktif Güç / Oda Rozeti (Sadece Aktifken Görünür) -->
+        <div class="hud-badges-row" id="hudBadgesRow">
+          <div class="stat-pill room-badge hidden" id="hudRoomBadge">
+            <span class="stat-icon">👥</span>
+            <span class="stat-text"><b id="hudRoomCode">----</b></span>
+          </div>
+          <div class="stat-pill powerup-active-pill hidden" id="hudPowerupBadge">
+            <span class="stat-icon" id="hudPowerupIcon">🧲</span>
+            <span class="stat-text" id="hudPowerupText" data-i18n="hud_powerup_magnet">MAGNET</span>
           </div>
         </div>
       </div>
@@ -678,7 +687,7 @@
         <button class="gameover-close-btn" id="closeGameOverBtn" title="Return to Main Menu" data-i18n-title="hud_exit_title">✕</button>
         <div class="skull-anim">💥</div>
         <h2 class="gameover-title" data-i18n="gameover_title">SQUASHED!</h2>
-        <p class="gameover-killedby" id="killedByText" data-i18n="gameover_killed_by">You crashed into another worm! 🍭</p>
+        <p class="gameover-killedby" id="killedByText">You crashed into another worm! 🍭</p>
 
         <div class="end-stats-grid">
           <div class="end-stat-box">
@@ -704,6 +713,44 @@
             <span data-i18n="gameover_respawn_btn">🔄 PLAY AGAIN / RESPAWN</span>
           </button>
           <button class="room-btn-danger" id="gameOverReturnMenuBtn" style="width: 100%; padding: 12px; font-size: 1rem;">
+            <span data-i18n="gameover_return_menu_btn">🚪 Return to Main Menu ✨</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== 🏆 VICTORY SCREEN (20K POINTS WIN) ==================== -->
+    <div class="game-overlay hidden" id="victoryScreen">
+      <div class="victory-popup-card">
+        <button class="gameover-close-btn" id="closeVictoryBtn" title="Return to Main Menu" data-i18n-title="hud_exit_title">✕</button>
+        <div class="victory-trophy-anim">🏆</div>
+        <h2 class="victory-title" id="victoryTitle" data-i18n="victory_title">ARENA ŞAMPİYONU!</h2>
+        <p class="victory-subtitle" id="victorySubtitle" data-i18n="victory_subtitle">20.000 puana ulaşarak arenayı fethettin! Harika bir zafer! 🎉</p>
+
+        <div class="victory-stats-grid">
+          <div class="end-stat-box" style="background: linear-gradient(145deg, rgba(255, 215, 0, 0.22), rgba(255, 140, 0, 0.12)); border: 2px solid #ffd700;">
+            <span class="end-stat-label" data-i18n="stat_winner_label" style="color: #ffe082;">Kazanan</span>
+            <span class="end-stat-value highlight-gold" id="victoryWinnerName">Sen</span>
+          </div>
+          <div class="end-stat-box" style="background: linear-gradient(145deg, rgba(0, 240, 255, 0.22), rgba(0, 168, 255, 0.12)); border: 2px solid #00f0ff;">
+            <span class="end-stat-label" data-i18n="stat_score_label" style="color: #80d8ff;">Toplam Puan</span>
+            <span class="end-stat-value" id="victoryScoreVal" style="color: #00f0ff;">20,000</span>
+          </div>
+          <div class="end-stat-box" style="background: linear-gradient(145deg, rgba(255, 0, 128, 0.22), rgba(255, 64, 129, 0.12)); border: 2px solid #ff4081;">
+            <span class="end-stat-label" data-i18n="stat_kills_label" style="color: #ff80ab;">Yok Edilen Bot</span>
+            <span class="end-stat-value" id="victoryKillsVal">0</span>
+          </div>
+          <div class="end-stat-box" id="victoryBonusBox" style="background: linear-gradient(145deg, rgba(52, 211, 153, 0.22), rgba(16, 185, 129, 0.12)); border: 2px solid #34d399;">
+            <span class="end-stat-label" data-i18n="stat_bonus_label" style="color: #b9f6ca;">Şampiyon Bonusu</span>
+            <span class="end-stat-value highlight-gold">+500 🪙</span>
+          </div>
+        </div>
+
+        <div class="gameover-buttons-row" style="display: flex; flex-direction: column; gap: 10px; width: 100%; margin-top: 14px;">
+          <button class="play-btn-large glow-pulse" id="victoryPlayAgainBtn" style="width: 100%;">
+            <span data-i18n="gameover_respawn_btn">🔄 PLAY AGAIN / RESPAWN</span>
+          </button>
+          <button class="room-btn-danger" id="victoryHomeBtn" style="width: 100%; padding: 12px; font-size: 1rem;">
             <span data-i18n="gameover_return_menu_btn">🚪 Return to Main Menu ✨</span>
           </button>
         </div>

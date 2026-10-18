@@ -292,6 +292,14 @@ class SoundSystem {
     });
   }
 
+  playVictory() {
+    if (!this.enabled) return;
+    const fanfare = [523.25, 659.25, 783.99, 1046.5, 1318.5, 1567.98];
+    fanfare.forEach((f, i) => {
+      setTimeout(() => this.playTone(f, 'triangle', 0.25, 0.45), i * 90);
+    });
+  }
+
   playLevelUp() {
     if (!this.enabled) return;
     const arpeggio = [440, 554.37, 659.25, 880, 1108.73];

@@ -151,8 +151,38 @@ public class MainActivity extends AppCompatActivity {
             // Telefonun kendi yerel sistem paylaşım arayüzünü (Bottom Sheet) bağla
             webView.addJavascriptInterface(new WebAppInterface(this), "AndroidApp");
 
-            // Dahili assets klasöründen index.html'i yükle
-            webView.loadUrl("file:///android_asset/index.html");
+            // Dahili assets klasöründen index.html'i yükle (URL davet parametrelerini koruyarak)
+            String initialUrl = "file:///android_asset/index.html";
+            try {
+                Intent intent = getIntent();
+                if (intent != null && intent.getData() != null) {
+                    Uri data = intent.getData();
+                    if (data.getQuery() != null && !data.getQuery().isEmpty()) {
+                        initialUrl += "?" + data.getQuery();
+                    } else if (data.getFragment() != null && !data.getFragment().isEmpty()) {
+                        initialUrl += "#" + data.getFragment();
+                    }
+                }
+            } catch (Exception ignored) {}
+            webView.loadUrl(initialUrl);
+        }
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        if (webView != null && intent != null && intent.getData() != null) {
+            try {
+                Uri data = intent.getData();
+                String target = "file:///android_asset/index.html";
+                if (data.getQuery() != null && !data.getQuery().isEmpty()) {
+                    target += "?" + data.getQuery();
+                } else if (data.getFragment() != null && !data.getFragment().isEmpty()) {
+                    target += "#" + data.getFragment();
+                }
+                webView.loadUrl(target);
+            } catch (Exception ignored) {}
         }
     }
 
@@ -200,6 +230,12 @@ public class MainActivity extends AppCompatActivity {
         if (webView != null) {
             webView.onResume();
         }
+        hideSystemUI();
+    }
+
+    @Override
+    public void onConfigurationChanged(android.content.res.Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
         hideSystemUI();
     }
 

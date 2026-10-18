@@ -16,14 +16,26 @@
         android:usesCleartextTraffic="true"
         android:theme="@style/Theme.NeonYilan.Fullscreen">
         <activity
-            android:name=".MainActivity"
+            android:name="com.neonyilan.game.MainActivity"
             android:hardwareAccelerated="true"
             android:exported="true"
-            android:configChanges="orientation|screenSize|keyboardHidden"
-            android:screenOrientation="portrait">
+            android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout"
+            android:screenOrientation="sensor">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="doguyazilim.github.io" android:pathPrefix="/worm-arena" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="wormarena" />
             </intent-filter>
         </activity>
     </application>

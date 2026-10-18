@@ -1,0 +1,107 @@
+====================================================================
+               GİZLİLİK POLİTİKASI / PRIVACY POLICY
+                          WORM ARENA
+====================================================================
+Geliştirici / Developer: Doğu Yazılım
+Son Güncelleme / Last Updated: 18 Ekim 2026
+İletişim / Contact: doguyazilim@gmail.com
+====================================================================
+
+--------------------------------------------------------------------
+                       TÜRKÇE BÖLÜM
+--------------------------------------------------------------------
+
+1. GİRİŞ
+Doğu Yazılım tarafından geliştirilen Worm Arena ("Oyun", "biz", "bizim")
+mobil oyununa hoş geldiniz. Oyuncularımızın gizliliğine ve kişisel
+verilerinin güvenliğine en üst düzeyde önem veriyoruz. Bu politika,
+oyunumuzu kullanırken verilerinizin nasıl korunduğunu açıklar.
+
+2. KİŞİSEL VERİ TOPLANMAZ
+Worm Arena, oyuncuların gizliliğine tam saygı duyar:
+- Oyunumuzda kayıt olma, üyelik veya e-posta ile giriş zorunluluğu YOKTUR.
+- Adınız, soyadınız, telefon numaranız, adresiniz, rehberiniz, fotoğraflarınız
+  veya biyometrik verileriniz KESİNLİKLE toplanmaz, kaydedilmez ve izlenmez.
+- Kesin GPS konum bilginiz ASLA alınmaz.
+- Kredi kartı veya ödeme bilgileriniz tarafımızca işlenmez ve saklanmaz.
+
+3. CİHAZINIZDA YEREL SAKLANAN BİLGİLER
+Oyun deneyiminizi sürdürebilmeniz için sadece temel oyun ilerleme verileri
+cihazınızın kendi hafızasında (HTML5 LocalStorage) yerel olarak tutulur:
+- Oyun için belirlediğiniz takma ad (rumuz).
+- Kazanılan oyun içi altınlar, XP puanı, seviye, açılan kostümler ve şapkalar.
+- Oyun ayarları (ses açık/kapalı, müzik, titreşim, kontrol türü ve dil tercihi).
+Bu veriler yalnızca telefonunuzun içinde kalır; harici hiçbir sunucuya
+aktarılmaz, satılmaz veya üçüncü taraflarla paylaşılmaz.
+
+4. ÇOK OYUNCULU (MULTIPLAYER) MODU
+Worm Arena, isteğe bağlı olarak arkadaşlarla oda kurup oynamayı sağlayan
+Peer-to-Peer (WebRTC) teknolojisini kullanır:
+- Bir odaya bağlandığınızda yalnızca anlık solucan hareket koordinatları
+  ve seçtiğiniz takma ad odadaki diğer oyuncularla gerçek zamanlı paylaşılır.
+- Bu veriler oyun bittiğinde anında silinir. Sunucularda hiçbir sohbet,
+  mesaj veya kişisel kayıt tutulmaz.
+
+5. CİHAZ İZİNLERİ
+- İNTERNET (INTERNET / ACCESS_NETWORK_STATE): Çok oyunculu odalara
+  bağlanmak için kullanılır.
+- TİTREŞİM (VIBRATE): Yem yerken veya çarpışmalarda telefonun hafifçe
+  titremesi (dokunsal geri bildirim) için kullanılır. Oyun içi ayarlardan
+  istenildiği zaman kapatılabilir.
+
+6. ÇOCUKLARIN GİZLİLİĞİ (COPPA VE AİLE POLİTİKASI)
+Worm Arena her yaştan kitleye ve ailelere uygundur; Google Play Aile
+Politikaları ve COPPA kurallarına tam uyumludur. 13 yaşın altındaki
+çocuklardan bilerek hiçbir kişisel bilgi talep edilmez ve toplanmaz.
+
+7. İLETİŞİM
+Gizlilik politikamızla ilgili tüm soru ve önerileriniz için:
+Geliştirici: Doğu Yazılım
+E-posta: doguyazilim@gmail.com
+
+
+--------------------------------------------------------------------
+                       ENGLISH SECTION
+--------------------------------------------------------------------
+
+1. INTRODUCTION
+Welcome to Worm Arena ("the Game", "we", "us", or "our"), developed by
+Doğu Yazılım. We are committed to protecting your privacy and ensuring
+a safe gaming environment for players of all ages.
+
+2. INFORMATION WE DO NOT COLLECT
+- We DO NOT require user registration, email, or account creation.
+- We DO NOT collect personal information such as real name, phone number,
+  contacts, photos, or biometric data.
+- We DO NOT track real-time precise GPS location data.
+- We DO NOT collect or process payment or credit card details.
+
+3. LOCALLY STORED DATA
+To provide a persistent game experience, non-personal progression data
+is stored locally on your device (LocalStorage):
+- Your chosen in-game player nickname.
+- Game progress: coins, XP, levels, unlocked skins, and hats.
+- Player preferences: sound, music, vibration, controls, and language.
+This data never leaves your device and is never shared with third parties.
+
+4. MULTIPLAYER MODE
+The optional "Play with Friends" mode uses Peer-to-Peer (WebRTC) technology:
+- Only real-time in-game coordinates (snake body, food positions) and your
+  nickname are synchronized with players in the same room.
+- Data is discarded as soon as the session ends. No chat or logs are stored.
+
+5. PERMISSIONS
+- INTERNET: Required to connect to multiplayer rooms.
+- VIBRATE: Optional haptic feedback during collisions or eating food (can be
+  turned off in settings).
+
+6. CHILDREN'S PRIVACY (COPPA & FAMILIES POLICY)
+Worm Arena complies with the Google Play Families Policy and the Children's
+Online Privacy Protection Act (COPPA). We do not knowingly collect personal
+information from children under the age of 13.
+
+7. CONTACT
+Developer: Doğu Yazılım
+Email: doguyazilim@gmail.com
+Application: Worm Arena
+====================================================================
