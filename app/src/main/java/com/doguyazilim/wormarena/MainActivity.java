@@ -54,6 +54,11 @@ public class MainActivity extends AppCompatActivity {
             webView.setLayerType(View.LAYER_TYPE_NONE, null);
             webView.setBackgroundColor(0xFF170D2C);
 
+            // Ana menüde ve WebView içinde her türlü kaydırma çubuğu ve overscroll zıplamasını kesin engelle
+            webView.setHorizontalScrollBarEnabled(false);
+            webView.setVerticalScrollBarEnabled(false);
+            webView.setOverScrollMode(View.OVER_SCROLL_NEVER);
+
             WebView.setWebContentsDebuggingEnabled(true);
 
             webView.setWebViewClient(new WebViewClient() {
