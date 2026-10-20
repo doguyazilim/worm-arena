@@ -965,10 +965,11 @@ class NetworkManager {
       this.game.state = 'PLAYING';
     } else if (data.type === 'GAME_TICK') {
       // Host'tan gelen anlık fizik karesi
-      // SADECE VE SADECE OYUN HENÜZ BAŞLAMAMIŞSA (lobi veya menüdeyse) arenaya başlat:
+      // SADECE VE SADECE GENEL CANLI ARENA İÇİN (ONLINE):
+      // Özel odalarda (arkadaşlarla oda) oyun SADECE oda sahibinin başlattığı 'GAME_START' paketiyle başlar!
       // (Ölüm veya Game Over anında ASLA tekrar başlatma yapma, böylece ekran kilitlenmez)
-      if (this.game.state === 'START' || this.game.state === 'MENU' || this.game.state === 'WAITING' || this.game.state === 'LOBBY') {
-        console.log('GAME_TICK alındı, lobi/menü durumundan oyuna başlanıyor!');
+      if (this.roomCode === 'ONLINE' && (this.game.state === 'START' || this.game.state === 'MENU' || this.game.state === 'WAITING' || this.game.state === 'LOBBY')) {
+        console.log('GAME_TICK alındı, genel canlı arenaya başlanıyor!');
         if (this.clientHelloInterval) {
           clearInterval(this.clientHelloInterval);
           this.clientHelloInterval = null;

@@ -240,8 +240,7 @@ class RoomInstance {
     this.foods = [];
     this.pendingNewFoods = [];
     this.pendingEatenFoods = [];
-    this.foodIdCounter = 1;
-    this.state = 'LOBBY'; // LOBBY veya PLAYING
+    this.state = roomCode === 'ONLINE' ? 'PLAYING' : 'LOBBY'; // ONLINE direkt başlar, özel odalar ise LOBBY bekler
 
     this.initFoods();
 
@@ -386,6 +385,8 @@ class RoomInstance {
 
   tick() {
     if (this.players.size === 0) return;
+    // Özel oda lobisindeyken (Host henüz başlatmamışken) oyun döngüsü ve GAME_TICK kesinlikle durdurulur!
+    if (this.roomCode !== 'ONLINE' && this.state !== 'PLAYING') return;
 
     // 1. Oyuncuları ilerlet
     for (const worm of this.players.values()) {
@@ -477,9 +478,9 @@ wss.on('connection', (ws) => {
         const skinId = data.skinId || 'white_king';
         const hatId = data.hatId || 'none';
         const roomCode = String(data.roomCode || 'ONLINE').trim().toUpperCase();
-        const isHost = !!data.isHost;
 
         currentRoom = getOrCreateRoom(roomCode);
+        const isHost = (roomCode !== 'ONLINE' && currentRoom.players.size === 0) ? true : !!data.isHost;
         playerWorm = new ServerWorm(playerId, playerName, skinId, hatId, isHost);
         currentRoom.players.set(ws, playerWorm);
 
@@ -490,11 +491,23 @@ wss.on('connection', (ws) => {
         ws.send(JSON.stringify({
           type: 'HELLO_ACK',
           playerId: playerId,
-          roomCode: roomCode
+          roomCode: roomCode,
+          isHost: isHost
         }));
 
-        // Eğer genel arena ise direkt oyuna başlat
-        if (roomCode === 'ONLINE' || currentRoom.state === 'PLAYING') {
+        // Eğer genel arena ise direkt oyuna başlat:
+        if (roomCode === 'ONLINE') {
+          ws.send(JSON.stringify({
+            type: 'GAME_START',
+            roomCode: roomCode,
+            worldWidth: WORLD_WIDTH,
+            worldHeight: WORLD_HEIGHT,
+            foods: currentRoom.foods.map(f => ({ x: f.x, y: f.y, type: f.type })),
+            spawns: activeSpawns,
+            players: currentRoom.getLobbyList()
+          }));
+        } else if (currentRoom.state === 'PLAYING') {
+          // Özel oda zaten başlatılmışsa oyuna dahil et:
           ws.send(JSON.stringify({
             type: 'GAME_START',
             roomCode: roomCode,
@@ -505,7 +518,8 @@ wss.on('connection', (ws) => {
             players: currentRoom.getLobbyList()
           }));
         } else {
-          // Özel oda lobisindeyse lobi listesini güncelle
+          // ÖZEL ODA LOBİSİNDE: KESİNLİKLE HİÇ KİMSE OYUNA GİREMEZ!
+          // Oda sahibi "BAŞLAT" butonuna basana kadar herkes lobide bekler:
           currentRoom.broadcast({
             type: 'LOBBY_STATE',
             roomCode: roomCode,
@@ -513,10 +527,10 @@ wss.on('connection', (ws) => {
           });
         }
 
-        console.log(`[>] ${playerName} (${playerId}) [Oda: ${roomCode}] katıldı. Odadaki kişi: ${currentRoom.players.size}`);
+        console.log(`[>] ${playerName} (${playerId}) [Oda: ${roomCode}] katıldı. (Host: ${isHost}, Durum: ${currentRoom.state}). Odadaki kişi: ${currentRoom.players.size}`);
       } else if (data.type === 'START_ROOM_GAME') {
-        // Oda sahibi odayı başlattı!
-        if (currentRoom) {
+        // Sadece oda sahibi odayı başlatabilir!
+        if (currentRoom && playerWorm && playerWorm.isHost) {
           currentRoom.state = 'PLAYING';
           const spawns = {};
           const count = currentRoom.players.size;
@@ -543,7 +557,7 @@ wss.on('connection', (ws) => {
             spawns: spawns,
             players: currentRoom.getLobbyList()
           });
-          console.log(`[🚀] Oda oyunu başlatıldı: ${currentRoom.roomCode}`);
+          console.log(`[🚀] Oda sahibi oyunu başlattı! [Oda: ${currentRoom.roomCode}] Toplam oyuncu: ${currentRoom.players.size}`);
         }
       } else if (data.type === 'PLAYER_INPUT') {
         if (playerWorm && !playerWorm.isDead) {
