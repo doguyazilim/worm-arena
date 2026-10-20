@@ -275,14 +275,21 @@
         <!-- 3. BOTTOM SECTION: Play Buttons & Tip -->
         <div class="menu-bottom-group">
           <div class="main-action-buttons">
-            <button class="play-btn-large glow-pulse" id="startGameBtn">
-              <span data-i18n="menu_play_btn">🎮 PLAY ▶</span>
+            <button class="server-btn-large glow-pulse" id="startLiveServerBtn">
+              <span class="server-btn-icon">🌐</span>
+              <span data-i18n="menu_server_btn">🌐 CANLI ARENA (Slither.io) 🚀</span>
             </button>
 
-            <button class="room-btn-secondary" id="openFriendsRoomBtn">
-              <span class="room-btn-icon">👥</span>
-              <span data-i18n="menu_friends_btn">Play with Friends (Room)</span>
-            </button>
+            <div class="secondary-actions-row">
+              <button class="room-btn-secondary sub-action-btn offline-play-btn" id="startGameBtn">
+                <span data-i18n="menu_play_offline_btn">🤖 Alıştırma (Botlar)</span>
+              </button>
+
+              <button class="room-btn-secondary sub-action-btn" id="openFriendsRoomBtn">
+                <span class="room-btn-icon">👥</span>
+                <span data-i18n="menu_friends_btn">Arkadaşlarla (Oda)</span>
+              </button>
+            </div>
           </div>
 
           <div class="mobile-tip">
@@ -658,6 +665,21 @@
                 <input type="checkbox" id="settingHighFps" checked>
                 <span class="toggle-slider"></span>
               </label>
+            </div>
+          </div>
+
+          <!-- Section: Dedicated Game Server -->
+          <div class="settings-section-badge">🌐 CANLI OYUN SUNUCUSU / SERVER</div>
+          <div class="settings-list">
+            <div class="setting-item" style="flex-direction: column; align-items: flex-start; gap: 8px;">
+              <div class="setting-info" style="width: 100%;">
+                <span class="setting-name">🌐 WebSocket Sunucu Adresi</span>
+                <span class="setting-desc">Slither.io canlı arenası için sunucu adresi (Render veya yerel)</span>
+              </div>
+              <div style="display: flex; gap: 8px; width: 100%;">
+                <input type="text" id="settingServerUrl" placeholder="ws://localhost:3000 veya wss://...onrender.com" style="flex: 1; background: rgba(0,0,0,0.4); border: 1.5px solid rgba(0,240,255,0.4); color: #00f0ff; padding: 8px 12px; border-radius: 10px; font-family: monospace; font-size: 0.82rem;">
+                <button id="saveServerUrlBtn" style="background: #00f0ff; color: #000; border: none; padding: 0 14px; border-radius: 10px; font-weight: 700; cursor: pointer;">Kaydet</button>
+              </div>
             </div>
           </div>
         </div>

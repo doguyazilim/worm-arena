@@ -13,6 +13,11 @@ edge_temp/
 *.log
 github_push.bat
 
+# Node & Server Dependencies
+node_modules/
+server/node_modules/
+package-lock.json
+
 # IDE & Editor Files
 .idea/
 .vscode/

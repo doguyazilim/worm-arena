@@ -1006,9 +1006,65 @@ html, body {
 .main-action-buttons {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   margin-top: 4px;
   margin-bottom: clamp(4px, 1vh, 8px);
+}
+
+.server-btn-large {
+  width: 100%;
+  min-height: 56px;
+  background: linear-gradient(135deg, #00f0ff 0%, #7928ca 50%, #ff007f 100%);
+  color: #ffffff;
+  font-family: var(--font-display);
+  font-size: clamp(1.05rem, 2.4vh, 1.3rem);
+  font-weight: 900;
+  letter-spacing: 1px;
+  border: 2.5px solid #00f0ff;
+  border-radius: 20px;
+  padding: clamp(12px, 2vh, 15px) 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  box-shadow: 0 7px 0 #4a0072, 0 14px 28px rgba(0, 240, 255, 0.45);
+  transition: transform 0.12s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.12s ease;
+}
+
+.server-btn-large:active {
+  transform: translateY(5px) scale(0.97);
+  box-shadow: 0 2px 0 #4a0072, 0 6px 14px rgba(0, 240, 255, 0.4);
+  filter: brightness(1.15);
+}
+
+.server-btn-icon {
+  font-size: 1.4rem;
+  filter: drop-shadow(0 0 6px rgba(0, 240, 255, 0.8));
+}
+
+.secondary-actions-row {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+.sub-action-btn {
+  flex: 1;
+  min-height: 46px;
+  padding: clamp(8px, 1.5vh, 11px) 10px;
+  font-size: clamp(0.78rem, 1.7vh, 0.88rem);
+  border-radius: 14px;
+  white-space: nowrap;
+}
+
+.offline-play-btn {
+  background: linear-gradient(135deg, #00f58d 0%, #00b4d8 100%);
+  box-shadow: 0 5px 0 #007a52, 0 10px 20px rgba(0, 245, 141, 0.35);
+  color: #022c22;
+}
+.offline-play-btn:active {
+  box-shadow: 0 2px 0 #007a52, 0 4px 8px rgba(0, 245, 141, 0.3);
 }
 
 .room-btn-secondary {
@@ -1039,6 +1095,7 @@ html, body {
 .room-btn-icon {
   font-size: 1.3rem;
 }
+
 
 .mobile-tip {
   margin-top: auto;

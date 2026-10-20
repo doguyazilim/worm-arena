@@ -1868,6 +1868,25 @@ class WormArenaGame {
       });
     }
 
+    const settingServerUrl = document.getElementById('settingServerUrl');
+    const saveServerUrlBtn = document.getElementById('saveServerUrlBtn');
+    if (settingServerUrl) {
+      settingServerUrl.value = localStorage.getItem('worm_server_url') || '';
+      if (saveServerUrlBtn) {
+        saveServerUrlBtn.addEventListener('click', () => {
+          const val = settingServerUrl.value.trim();
+          if (val) {
+            localStorage.setItem('worm_server_url', val);
+          } else {
+            localStorage.removeItem('worm_server_url');
+          }
+          if (window.showInGameAlert) {
+            window.showInGameAlert('Sunucu adresi kaydedildi!', 'success', '✅ BAŞARILI');
+          }
+        });
+      }
+    }
+
     const openSettingsBtn = document.getElementById('openSettingsBtn');
     const openSettingsShortcutBtn = document.getElementById('openSettingsShortcutBtn');
     const closeSettingsBtn = document.getElementById('closeSettingsBtn');
@@ -2110,6 +2129,25 @@ class WormArenaGame {
   getSelectedSkinId() {
     const skin = (typeof SKINS !== 'undefined' && SKINS[this.selectedSkinIndex]) ? SKINS[this.selectedSkinIndex] : null;
     return skin ? skin.id : 'white_king';
+  }
+
+  startLiveServerGame() {
+    this.network.disconnect();
+    const playerName = this.validatePlayerName(true);
+    if (!playerName) return;
+    if (!this.validateSelectedSkin()) return;
+
+    sounds.init();
+    sounds.playClick();
+    if (window.showInGameAlert) {
+      const msg = window.I18N ? window.I18N.t('net_connecting_server') : 'Canlı oyun sunucusuna bağlanılıyor...';
+      const title = window.I18N ? window.I18N.t('net_connecting_title') : '🌐 SUNUCUYA BAĞLANILIYOR';
+      window.showInGameAlert(msg, 'info', title);
+    }
+
+    this.network.connectToGameServer().catch(err => {
+      console.warn('Canlı oyun sunucusuna bağlanılamadı:', err);
+    });
   }
 
   startGame(includeBots = true) {
@@ -5425,6 +5463,11 @@ class WormArenaGame {
         triggerEmote(e);
       });
     });
+
+    const startLiveServerBtn = document.getElementById('startLiveServerBtn');
+    if (startLiveServerBtn) {
+      startLiveServerBtn.addEventListener('click', () => this.startLiveServerGame());
+    }
 
     const startGameBtn = document.getElementById('startGameBtn');
     if (startGameBtn) {

@@ -16,6 +16,8 @@ class NetworkManager {
     this.remotePlayers = new Map(); // peerId -> Worm nesnesi
     this.hostConn = null; // Client için: host DataConnection
     this.myPeerId = null;
+    this.isServerMode = false; // 7/24 Dedicated WebSocket sunucu modu
+    this.ws = null; // WebSocket bağlantı nesnesi
 
     // Client lobi el sıkışma ve teyit kontrolü
     this.clientHelloInterval = null;
@@ -758,6 +760,120 @@ class NetworkManager {
     }, 1200);
   }
 
+  // ==================== 2.5 CANLI SLITHER.IO OYUN SUNUCUSUNA BAĞLAN (DEDICATED SERVER) ====================
+  // 7/24 internette açık, genel veya yerel Node.js WebSocket sunucusuna bağlanır
+  connectToGameServer(customUrl = null) {
+    return new Promise((resolve, reject) => {
+      this.disconnect();
+
+      this.isServerMode = true;
+      this.isHost = false;
+      this.isMultiplayer = true;
+      this.roomCode = 'ONLINE';
+
+      let serverUrl = customUrl || localStorage.getItem('worm_server_url');
+      if (!serverUrl) {
+        if (typeof window !== 'undefined' && window.location && window.location.hostname && window.location.hostname !== '' && window.location.protocol.startsWith('http')) {
+          const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+          const host = window.location.hostname;
+          const port = window.location.port ? `:${window.location.port}` : '';
+          serverUrl = `${proto}//${host}${port}`;
+        } else {
+          serverUrl = 'ws://localhost:3000';
+        }
+      }
+
+      console.log('Canlı oyun sunucusuna bağlanılıyor:', serverUrl);
+      if (this.onJoinStatus) {
+        this.onJoinStatus(window.I18N ? window.I18N.t('net_connecting_server') : 'Canlı oyun sunucusuna bağlanılıyor...');
+      }
+
+      let ws;
+      try {
+        ws = new WebSocket(serverUrl);
+      } catch (err) {
+        if (window.showInGameAlert) {
+          window.showInGameAlert('Oyun sunucusu adresine bağlanılamadı.', 'warning', '⚠️ SUNUCU HATASI');
+        }
+        reject(err);
+        return;
+      }
+
+      this.ws = ws;
+
+      const connTimeout = setTimeout(() => {
+        if (ws.readyState !== WebSocket.OPEN) {
+          try { ws.close(); } catch (e) {}
+          const errorMsg = window.I18N ? window.I18N.t('server_timeout_msg') : 'Oyun sunucusuna bağlanılamadı. Sunucunun açık olduğundan emin olun.';
+          if (window.showInGameAlert) {
+            window.showInGameAlert(errorMsg, 'warning', '⚠️ SUNUCU ZAMAN AŞIMI');
+          }
+          reject(new Error('Server connection timeout'));
+        }
+      }, 7500);
+
+      // WebRTC kanalı gibi davranan uyumlu adaptör
+      this.hostConn = {
+        get open() { return ws && ws.readyState === WebSocket.OPEN; },
+        _open: true,
+        send: (data) => {
+          if (ws && ws.readyState === WebSocket.OPEN) {
+            try {
+              ws.send(typeof data === 'string' ? data : JSON.stringify(data));
+            } catch (e) {
+              console.warn('Sunucuya veri gönderme hatası:', e);
+            }
+          }
+        }
+      };
+
+      ws.onopen = () => {
+        clearTimeout(connTimeout);
+        console.log('Oyun sunucusuna başarıyla bağlanıldı!');
+        const defaultPlayerName = window.I18N ? window.I18N.t('player_default') : 'Player';
+        const playerName = (this.game && this.game.getPlayerName) ? this.game.getPlayerName() : defaultPlayerName;
+        const skinId = (this.game && this.game.getSelectedSkinId) ? this.game.getSelectedSkinId() : 'white_king';
+        const hatId = (this.game && this.game.equippedHat) ? this.game.equippedHat : 'none';
+
+        this.hostConn.send({
+          type: 'PLAYER_HELLO',
+          name: playerName,
+          skinId: skinId,
+          hatId: hatId
+        });
+
+        resolve(serverUrl);
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          this.handleHostMessage(data);
+        } catch (e) {
+          console.warn('Sunucu mesajı ayrıştırma hatası:', e);
+        }
+      };
+
+      ws.onclose = () => {
+        console.warn('Oyun sunucusu bağlantısı kapandı.');
+        if (this.game && this.game.state === 'PLAYING') {
+          if (window.showInGameAlert) {
+            window.showInGameAlert('Oyun sunucusu bağlantısı kesildi. Menüye dönülüyor...', 'warning', '⚠️ BAĞLANTI KESİLDİ');
+          }
+          setTimeout(() => {
+            if (this.game && this.game.state === 'PLAYING') {
+              this.game.returnToMenu();
+            }
+          }, 2500);
+        }
+      };
+
+      ws.onerror = (err) => {
+        console.error('WebSocket hatası:', err);
+      };
+    });
+  }
+
   // ==================== 3. ODAYA KATIL (CLIENT OL) ====================
   // WhatsApp'tan oyuna dönen oda sahibine yeterli zaman tanımak için 10 aşamalı sabırlı yeniden deneme yapar
   joinRoom(code, attempt = 1) {
@@ -1438,6 +1554,11 @@ class NetworkManager {
       } catch (e) {}
       this.peer = null;
     }
+    if (this.ws) {
+      try { this.ws.close(); } catch (e) {}
+      this.ws = null;
+    }
+    this.isServerMode = false;
     if (this.heartbeatInterval) {
       clearInterval(this.heartbeatInterval);
       this.heartbeatInterval = null;
