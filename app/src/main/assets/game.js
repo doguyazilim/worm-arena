@@ -5730,7 +5730,7 @@ class WormArenaGame {
 
   // Arkadaşlara gönderilecek doğrudan web katılım linki
   getInviteLink(code) {
-    const defaultPublicUrl = 'https://doguyazilim.github.io/worm-arena';
+    const defaultPublicUrl = 'https://worm-arena-6jh7.onrender.com';
 
     // Eğer halihazırda canlı bir web sitesi veya GitHub Pages üzerindeyse o anki adresi kullan
     if (window.location.protocol === 'https:' || (window.location.protocol === 'http:' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1' && !window.location.hostname.startsWith('10.') && !window.location.hostname.startsWith('192.168.'))) {
@@ -5739,7 +5739,7 @@ class WormArenaGame {
       return `${window.location.origin}${basePath}?oda=${code}`;
     }
 
-    // Android APK, yerel dosya veya emülatördeyse GitHub Pages linkini ver
+    // Android APK, yerel dosya veya emülatördeyse Render canlı sunucu linkini ver
     return `${defaultPublicUrl}/?oda=${code}`;
   }
 
