@@ -462,48 +462,44 @@ function getOrCreateRoom(roomCode = 'ONLINE') {
   return room;
 }
 
-// Canlı Arena için 20-25 kişilik dinamik oda havuzu ve rastgele eşleştirme
-const DEFAULT_ARENA_COUNT = 4; // Kalıcı 4 canlı arena kanalı (ARENA_1, ARENA_2, ARENA_3, ARENA_4)
-
+// Canlı Arena için 20-25 kişilik dinamik oda havuzu ve oyuncu odaklı eşleştirme
 function findOrSpawnArenaRoom() {
-  // En az 4 arena kanalı başlangıçtan itibaren havuzda hazır bulunsun
-  for (let i = 1; i <= DEFAULT_ARENA_COUNT; i++) {
-    const code = `ARENA_${i}`;
-    if (!rooms.has(code)) {
-      const r = getOrCreateRoom(code);
-      r.state = 'PLAYING';
-    }
-  }
-
-  // 1. Kapasitesi 25'ten az olan mevcut açık canlı arena odalarını bul
-  const availableArenas = [];
+  // 1. KULLANICI İSTEĞİ: İçinde halihazırda oyuncu olan ve kapasitesi (25 kişi) dolmamış odaları topla!
+  // Böylece oyuncu rastgele bir odaya düştüğünde asla tek başına kalmaz, rakipleriyle karşılaşır.
+  const occupiedArenas = [];
   for (const room of rooms.values()) {
-    if (room.roomCode.startsWith('ARENA_') && room.players.size < MAX_PLAYERS_PER_ROOM) {
-      availableArenas.push(room);
+    if (room.roomCode.startsWith('ARENA_') && room.players.size > 0 && room.players.size < MAX_PLAYERS_PER_ROOM) {
+      occupiedArenas.push(room);
     }
   }
 
-  // 2. Kullanıcı isteği: Canlı arenada herkesi rastgele müsait bir arena odasına ata!
-  if (availableArenas.length > 0) {
-    const chosenRoom = availableArenas[Math.floor(Math.random() * availableArenas.length)];
+  // 2. Eğer içinde oyuncu olan odalar varsa, oyuncuyu bu odalardan birine RASTGELE ata!
+  // (Örn: ARENA_1'de 10 kişi, ARENA_2'de 8 kişi varsa ikisi arasında rastgele dağıtır)
+  if (occupiedArenas.length > 0) {
+    const chosenRoom = occupiedArenas[Math.floor(Math.random() * occupiedArenas.length)];
+    console.log(`[🌐 Canlı Arena] Oyuncu aktif odaya atandı: ${chosenRoom.roomCode} (Mevcut oyuncu: ${chosenRoom.players.size})`);
     return chosenRoom;
   }
 
-  // 3. Eğer mevcut tüm odalar 25 kişiyle dolmuşsa, yeni bir arena odası aç!
-  let arenaNum = DEFAULT_ARENA_COUNT + 1;
-  while (rooms.has(`ARENA_${arenaNum}`)) {
-    const r = rooms.get(`ARENA_${arenaNum}`);
+  // 3. Eğer henüz içinde oyuncu olan hiçbir arena odası yoksa (veya hepsi 25/25 ful dolmuşsa):
+  // Sırayla ilk müsait odayı aç veya kullan (ARENA_1, ARENA_2 vb.).
+  // Oyuncuları farklı boş odalara dağıtmak yerine sırayla doldurur, böylece ilk gelenler aynı odada toplanır!
+  let arenaNum = 1;
+  while (true) {
+    const code = `ARENA_${arenaNum}`;
+    let r = rooms.get(code);
+    if (!r) {
+      r = getOrCreateRoom(code);
+      r.state = 'PLAYING';
+      console.log(`[🌐 Canlı Arena] Yeni Arena Odası Açıldı: ${code}`);
+      return r;
+    }
     if (r.players.size < MAX_PLAYERS_PER_ROOM) {
+      console.log(`[🌐 Canlı Arena] İlk boş odaya yönlendirildi: ${code}`);
       return r;
     }
     arenaNum++;
   }
-
-  const newCode = `ARENA_${arenaNum}`;
-  const newRoom = getOrCreateRoom(newCode);
-  newRoom.state = 'PLAYING';
-  console.log(`[🌐] Yeni 25 Kişilik Canlı Arena Odası Başlatıldı: ${newCode}`);
-  return newRoom;
 }
 
 // ==================== WEBSOCKET BAĞLANTI YÖNETİMİ ====================
@@ -702,15 +698,16 @@ wss.on('connection', (ws) => {
         });
       }
 
-      // Boşalan özel odaları temizle (ARENA_ odaları kalıcı havuzdur, silinmez!)
-      if (currentRoom.players.size === 0 && !currentRoom.roomCode.startsWith('ARENA_') && currentRoom.roomCode !== 'ONLINE') {
+      // Boşalan odaları temizle (ARENA_1 kalıcı ana arenadır, silinmez; boşalan ek arenalar veya özel odalar temizlenir)
+      if (currentRoom.players.size === 0 && currentRoom.roomCode !== 'ARENA_1' && currentRoom.roomCode !== 'ONLINE') {
+        const roomToClean = currentRoom;
         setTimeout(() => {
-          if (currentRoom.players.size === 0 && !currentRoom.roomCode.startsWith('ARENA_')) {
-            currentRoom.destroy();
-            rooms.delete(currentRoom.roomCode);
-            console.log(`[x] Boş özel oda kapatıldı: ${currentRoom.roomCode}`);
+          if (roomToClean.players.size === 0 && roomToClean.roomCode !== 'ARENA_1' && roomToClean.roomCode !== 'ONLINE') {
+            roomToClean.destroy();
+            rooms.delete(roomToClean.roomCode);
+            console.log(`[x] Boşalan oda kapatıldı ve temizlendi: ${roomToClean.roomCode}`);
           }
-        }, 30000);
+        }, 45000);
       }
     }
   });
