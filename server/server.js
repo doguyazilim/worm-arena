@@ -3,10 +3,11 @@
  * WORM ARENA - 7/24 DEDICATED WEBSOCKET OYUN SUNUCUSU
  * Slither.io / Wormate.io Mimarisi
  * 
- * • 7/24 İnternette çalışabilir (Render.com, VPS vb. 0 TL)
- * • Oyun mantığı (yılanlar, yemler, botlar, çarpışmalar) sunucuda döner
- * • İstemciler sadece yön açısını gönderir
- * • Hile yapılamaz, host kopması yaşanmaz
+ * • 7/24 İnternette çalışır (Render.com, 0 TL)
+ * • Hem Genel Canlı Arena hem de 4 Haneli Arkadaş Odaları desteği
+ * • Arenada bot YOKTUR (Sadece gerçek canlı oyuncular!)
+ * • Kafa-gövde çarpışma fiziği ve anında yem patlaması
+ * • Hile koruması ve yüksek performanslı 30 FPS tick
  * ========================================================
  */
 
@@ -15,12 +16,10 @@ const fs = require('fs');
 const path = require('path');
 const WebSocket = require('ws');
 
-// Port ayarı (Render.com ve bulut platformları process.env.PORT kullanır)
 const PORT = process.env.PORT || 3000;
 const CLIENT_ROOT = path.join(__dirname, '..');
 
 // ==================== STATİK DOSYA SUNUCUSU ====================
-// Tarayıcıdan açıldığında oyunu doğrudan oynamayı sağlar
 const MIME_TYPES = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8',
@@ -37,7 +36,6 @@ const MIME_TYPES = {
 };
 
 const server = http.createServer((req, res) => {
-  // CORS başlıkları
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
 
@@ -47,10 +45,13 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // Sunucu sağlık kontrolü rotası
   if (req.url === '/health' || req.url === '/ping') {
+    let totalPlayers = 0;
+    for (const room of rooms.values()) {
+      totalPlayers += room.players.size;
+    }
     res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ status: 'ok', players: game.players.size, time: Date.now() }));
+    res.end(JSON.stringify({ status: 'ok', rooms: rooms.size, players: totalPlayers, time: Date.now() }));
     return;
   }
 
@@ -74,21 +75,12 @@ const server = http.createServer((req, res) => {
   });
 });
 
-// ==================== OYUN VERİ TANIMLARI ====================
+// ==================== SABİTLER ====================
 const WORLD_WIDTH = 6400;
 const WORLD_HEIGHT = 6400;
-const TARGET_FOOD_COUNT = 1200;
-const BOT_COUNT = 12;
-
-const BOT_NAMES = [
-  'Timothy', 'Hugo', 'Fox', 'Kowalski', 'Shadow', 'Alice', 'Rex', 'Viper',
-  'Speedy', 'Phantom', 'Dragon', 'Blaze', 'Storm', 'Luna', 'Titan'
-];
-
-const BOT_SKINS = [
-  'white_king', 'candy_pink', 'neon_cyber', 'golden_dragon', 'fire_tiger',
-  'shadow_ninja', 'samurai_warlord', 'dark_galaxy', 'frozen_frost'
-];
+const TARGET_FOOD_COUNT = 1400;
+// KULLANICI İSTEĞİ: Arenada bot olmayacak! Sadece gerçek oyuncular olacak!
+const BOT_COUNT = 0;
 
 const FOOD_TYPES = [
   { type: 'apple', points: 3, radius: 10 },
@@ -101,17 +93,18 @@ const FOOD_TYPES = [
   { type: 'double', points: 25, radius: 18 }
 ];
 
-// ==================== SUNUCU OYUN MOTORU (SERVER GAME ENGINE) ====================
+// ==================== SUNUCU OYUNCU SINIFI ====================
 class ServerWorm {
-  constructor(id, name, skinId, hatId, isBot = false, x = null, y = null) {
+  constructor(id, name, skinId, hatId, isHost = false, x = null, y = null) {
     this.id = id;
-    this.name = name || (isBot ? 'Bot' : 'Oyuncu');
+    this.name = name || 'Oyuncu';
     this.skinId = skinId || 'white_king';
     this.hatId = hatId || 'none';
-    this.isBot = isBot;
+    this.isHost = isHost;
+    this.isBot = false;
 
-    this.x = x !== null ? x : Math.round(WORLD_WIDTH / 2 + (Math.random() - 0.5) * 2000);
-    this.y = y !== null ? y : Math.round(WORLD_HEIGHT / 2 + (Math.random() - 0.5) * 2000);
+    this.x = x !== null ? x : Math.round(WORLD_WIDTH / 2 + (Math.random() - 0.5) * 1800);
+    this.y = y !== null ? y : Math.round(WORLD_HEIGHT / 2 + (Math.random() - 0.5) * 1800);
     this.angle = Math.random() * Math.PI * 2;
     this.targetAngle = this.angle;
 
@@ -127,7 +120,6 @@ class ServerWorm {
     this.isDead = false;
     this.killedBy = null;
 
-    // Gövde segmentleri
     this.body = [];
     const initialSegments = 11;
     for (let i = 0; i < initialSegments; i++) {
@@ -136,16 +128,11 @@ class ServerWorm {
         y: Math.round(this.y - Math.sin(this.angle) * (i * this.spacing))
       });
     }
-
-    // Bot yapay zeka değişkenleri
-    this.botTimer = Math.floor(Math.random() * 60);
-    this.botTargetFood = null;
   }
 
-  update(foods, allWorms) {
+  update() {
     if (this.isDead) return;
 
-    // Hızlanma ve kütle yakımı
     if (this.isBoosting && this.score > 8) {
       this.speed = this.boostSpeed;
       this.score = Math.max(8, this.score - 0.20);
@@ -154,17 +141,10 @@ class ServerWorm {
       this.isBoosting = false;
     }
 
-    // Yarıçap ve uzunluk hesabı
     this.radius = Math.min(28, 11 + Math.floor(this.score / 180));
     this.targetLength = Math.max(8, 11 + Math.floor(this.score / 15));
     this.spacing = Math.max(6.5, this.radius * 0.52);
 
-    // Bot yapay zekası
-    if (this.isBot) {
-      this.updateBotAI(foods, allWorms);
-    }
-
-    // Yumuşak dönüş
     let diff = this.targetAngle - this.angle;
     while (diff < -Math.PI) diff += Math.PI * 2;
     while (diff > Math.PI) diff -= Math.PI * 2;
@@ -177,11 +157,9 @@ class ServerWorm {
     while (this.angle < -Math.PI) this.angle += Math.PI * 2;
     while (this.angle > Math.PI) this.angle -= Math.PI * 2;
 
-    // Başı ilerlet
     this.x += Math.cos(this.angle) * this.speed;
     this.y += Math.sin(this.angle) * this.speed;
 
-    // Harita sınırı kontrolü
     const margin = this.radius + 10;
     if (this.x < margin || this.x > WORLD_WIDTH - margin || this.y < margin || this.y > WORLD_HEIGHT - margin) {
       this.isDead = true;
@@ -189,7 +167,6 @@ class ServerWorm {
       return;
     }
 
-    // Gövde segment takibi
     if (this.body.length > 0) {
       let prevX = this.x;
       let prevY = this.y;
@@ -215,7 +192,6 @@ class ServerWorm {
       }
     }
 
-    // Uzunluk dengeleme
     while (this.body.length < this.targetLength) {
       const last = this.body[this.body.length - 1];
       this.body.push({ x: last.x, y: last.y });
@@ -225,57 +201,7 @@ class ServerWorm {
     }
   }
 
-  updateBotAI(foods, allWorms) {
-    this.botTimer++;
-
-    // 1. Sınırlardan kaçınma
-    const edgeMargin = 250;
-    if (this.x < edgeMargin) { this.targetAngle = 0; return; }
-    if (this.x > WORLD_WIDTH - edgeMargin) { this.targetAngle = Math.PI; return; }
-    if (this.y < edgeMargin) { this.targetAngle = Math.PI / 2; return; }
-    if (this.y > WORLD_HEIGHT - edgeMargin) { this.targetAngle = -Math.PI / 2; return; }
-
-    // 2. Tehlikeli gövdelerden kaçınma
-    const lookAheadDist = this.radius * 3.5 + 40;
-    const lookX = this.x + Math.cos(this.angle) * lookAheadDist;
-    const lookY = this.y + Math.sin(this.angle) * lookAheadDist;
-
-    for (const other of allWorms) {
-      if (other === this || other.isDead) continue;
-      for (let i = 2; i < other.body.length; i += 2) {
-        const seg = other.body[i];
-        if (Math.hypot(lookX - seg.x, lookY - seg.y) < other.radius + this.radius + 15) {
-          const awayAngle = Math.atan2(this.y - seg.y, this.x - seg.x);
-          this.targetAngle = awayAngle;
-          this.isBoosting = false;
-          return;
-        }
-      }
-    }
-
-    // 3. En yakın yeme yönelme
-    if (this.botTimer % 20 === 0 || !this.botTargetFood) {
-      let closestDist = 450;
-      let closestFood = null;
-      for (let i = 0; i < foods.length; i += 4) { // Hızlı örnekleme
-        const f = foods[i];
-        const dist = Math.hypot(this.x - f.x, this.y - f.y);
-        if (dist < closestDist) {
-          closestDist = dist;
-          closestFood = f;
-        }
-      }
-      this.botTargetFood = closestFood;
-    }
-
-    if (this.botTargetFood) {
-      this.targetAngle = Math.atan2(this.botTargetFood.y - this.y, this.botTargetFood.x - this.x);
-    }
-  }
-
-  // Ağ aktarımı için hafifletilmiş veri paketi
   serialize() {
-    // Bant genişliği tasarrufu için gövde noktalarını seyrelt (downsample)
     const downsampledBody = [];
     const step = Math.max(1, Math.floor(this.body.length / 32));
     for (let i = 0; i < this.body.length; i += step) {
@@ -290,7 +216,8 @@ class ServerWorm {
       name: this.name,
       skinId: this.skinId,
       hatId: this.hatId,
-      isBot: this.isBot,
+      isBot: false,
+      isHost: this.isHost,
       x: Math.round(this.x),
       y: Math.round(this.y),
       angle: Number(this.angle.toFixed(2)),
@@ -305,19 +232,20 @@ class ServerWorm {
   }
 }
 
-class ServerGame {
-  constructor() {
+// ==================== ODA YÖNETİCİSİ (ROOM INSTANCE) ====================
+class RoomInstance {
+  constructor(roomCode) {
+    this.roomCode = roomCode;
     this.players = new Map(); // ws -> ServerWorm
-    this.bots = [];
     this.foods = [];
     this.pendingNewFoods = [];
     this.pendingEatenFoods = [];
     this.foodIdCounter = 1;
+    this.state = 'LOBBY'; // LOBBY veya PLAYING
 
     this.initFoods();
-    this.initBots();
 
-    // Saniyede 30 tick fizik & ağ güncellemesi (~33.3ms)
+    // 30 FPS Oyun Döngüsü
     this.loopInterval = setInterval(() => this.tick(), 33);
   }
 
@@ -366,22 +294,6 @@ class ServerGame {
     return foodItem;
   }
 
-  initBots() {
-    this.bots = [];
-    for (let i = 0; i < BOT_COUNT; i++) {
-      this.spawnBot(i);
-    }
-  }
-
-  spawnBot(index = 0) {
-    const name = BOT_NAMES[index % BOT_NAMES.length] || `Bot_${index}`;
-    const skin = BOT_SKINS[index % BOT_SKINS.length];
-    const bot = new ServerWorm(`bot_${Date.now()}_${Math.floor(Math.random() * 1000)}`, name, skin, 'none', true);
-    this.bots.push(bot);
-    return bot;
-  }
-
-  // Ölen yılanın vücudunu lezzetli yıldız ve meyvelere dönüştür (Slither.io ziyafeti)
   dropFoodFromWorm(worm) {
     if (!worm || !worm.body) return;
     const count = Math.min(45, Math.max(8, Math.floor(worm.body.length / 2)));
@@ -395,8 +307,10 @@ class ServerGame {
     }
   }
 
-  // Çarpışma kontrolleri (Kafa gövdeye çarparsa kafa ölür!)
-  checkCollisions(allWorms) {
+  // KESİN KAFA-GÖVDE ÇARPIŞMA FİZİĞİ (Slither.io / Wormate.io)
+  checkCollisions() {
+    const allWorms = Array.from(this.players.values());
+
     for (const wA of allWorms) {
       if (wA.isDead) continue;
 
@@ -404,34 +318,50 @@ class ServerGame {
         if (wA === wB || wB.isDead) continue;
 
         // wA'nın kafası wB'nin gövdesine çarptı mı?
-        const hitDistance = wA.radius + wB.radius * 0.72;
+        const hitDistance = wA.radius * 0.92 + wB.radius * 0.92;
         const hitDistSq = hitDistance * hitDistance;
 
         for (let i = 1; i < wB.body.length; i++) {
           const seg = wB.body[i];
           const dx = wA.x - seg.x;
           const dy = wA.y - seg.y;
-          if (dx * dx + dy * dy < hitDistSq) {
-            // wA öldü!
+          if (dx * dx + dy * dy <= hitDistSq) {
+            // wA ÖLDÜ!
             wA.isDead = true;
             wA.killedBy = wB.name;
             wB.kills = (wB.kills || 0) + 1;
-            wB.score += 25; // Öldürme ödülü
+            wB.score += 60;
             this.dropFoodFromWorm(wA);
             break;
           }
         }
 
         if (wA.isDead) break;
+
+        // Kafa kafaya çarpışma
+        const headDist = (wA.radius + wB.radius) * 0.90;
+        const hdx = wA.x - wB.x;
+        const hdy = wA.y - wB.y;
+        if (hdx * hdx + hdy * hdy < headDist * headDist) {
+          const loser = (wA.score <= wB.score) ? wA : wB;
+          const winner = (loser === wA) ? wB : wA;
+          loser.isDead = true;
+          loser.killedBy = winner.name;
+          winner.kills = (winner.kills || 0) + 1;
+          winner.score += 60;
+          this.dropFoodFromWorm(loser);
+          break;
+        }
       }
     }
   }
 
-  // Yem yeme kontrolleri
-  checkFoodEating(allWorms) {
+  checkFoodEating() {
+    const allWorms = Array.from(this.players.values());
+
     for (const worm of allWorms) {
       if (worm.isDead) continue;
-      const eatDist = worm.radius + 12;
+      const eatDist = worm.radius + 14;
       const eatDistSq = eatDist * eatDist;
 
       for (let i = this.foods.length - 1; i >= 0; i--) {
@@ -446,7 +376,6 @@ class ServerGame {
       }
     }
 
-    // Yem sayısı düştüyse yeni yemler üret
     if (this.foods.length < TARGET_FOOD_COUNT) {
       const needed = Math.min(8, TARGET_FOOD_COUNT - this.foods.length);
       for (let i = 0; i < needed; i++) {
@@ -455,37 +384,22 @@ class ServerGame {
     }
   }
 
-  // 30 FPS Ana Döngü
   tick() {
-    const playerWorms = Array.from(this.players.values());
-    const allWorms = [...playerWorms, ...this.bots];
+    if (this.players.size === 0) return;
 
-    // 1. Tüm yılanları ilerlet
-    for (const w of allWorms) {
-      w.update(this.foods, allWorms);
+    // 1. Oyuncuları ilerlet
+    for (const worm of this.players.values()) {
+      worm.update();
     }
 
     // 2. Çarpışmaları hesapla
-    this.checkCollisions(allWorms);
+    this.checkCollisions();
 
     // 3. Yem yemeleri hesapla
-    this.checkFoodEating(allWorms);
+    this.checkFoodEating();
 
-    // 4. Ölen botları temizle ve yeniden doğur
-    for (let i = this.bots.length - 1; i >= 0; i--) {
-      const bot = this.bots[i];
-      if (bot.isDead) {
-        this.bots.splice(i, 1);
-        setTimeout(() => {
-          if (this.bots.length < BOT_COUNT) {
-            this.spawnBot(Math.floor(Math.random() * BOT_NAMES.length));
-          }
-        }, 3500);
-      }
-    }
-
-    // 5. Durum paketini derle ve tüm bağlı oyunculara yayınla
-    const wormStates = allWorms.map(w => w.serialize());
+    // 4. Durum paketini derle ve yayınla
+    const wormStates = Array.from(this.players.values()).map(w => w.serialize());
 
     const tickPayload = JSON.stringify({
       type: 'GAME_TICK',
@@ -497,25 +411,62 @@ class ServerGame {
     this.pendingNewFoods = [];
     this.pendingEatenFoods = [];
 
-    // Tüm bağlı WebSocket istemcilerine gönder
-    for (const [ws, playerWorm] of this.players.entries()) {
+    for (const ws of this.players.keys()) {
       if (ws.readyState === WebSocket.OPEN) {
         ws.send(tickPayload);
       }
     }
   }
+
+  broadcast(obj) {
+    const payload = typeof obj === 'string' ? obj : JSON.stringify(obj);
+    for (const ws of this.players.keys()) {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(payload);
+      }
+    }
+  }
+
+  getLobbyList() {
+    return Array.from(this.players.values()).map(p => ({
+      id: p.id,
+      name: p.name,
+      skinId: p.skinId,
+      hatId: p.hatId,
+      isHost: p.isHost
+    }));
+  }
+
+  destroy() {
+    if (this.loopInterval) clearInterval(this.loopInterval);
+    this.players.clear();
+    this.foods = [];
+  }
 }
 
-const game = new ServerGame();
+// Tüm aktif odalar haritası
+const rooms = new Map(); // roomCode -> RoomInstance
+
+function getOrCreateRoom(roomCode = 'ONLINE') {
+  const code = String(roomCode || 'ONLINE').trim().toUpperCase();
+  let room = rooms.get(code);
+  if (!room) {
+    room = new RoomInstance(code);
+    rooms.set(code, room);
+    console.log(`[+] Yeni oda oluşturuldu: ${code}`);
+  }
+  return room;
+}
 
 // ==================== WEBSOCKET BAĞLANTI YÖNETİMİ ====================
 const wss = new WebSocket.Server({ server });
 
 wss.on('connection', (ws) => {
   const playerId = `p_${Date.now()}_${Math.floor(Math.random() * 10000)}`;
+  let currentRoom = null;
   let playerWorm = null;
 
-  console.log(`[+] Yeni oyuncu bağlandı: ${playerId}`);
+  console.log(`[+] Soket bağlandı: ${playerId}`);
 
   ws.on('message', (message) => {
     try {
@@ -525,48 +476,113 @@ wss.on('connection', (ws) => {
         const playerName = (data.name || 'Oyuncu').substring(0, 14);
         const skinId = data.skinId || 'white_king';
         const hatId = data.hatId || 'none';
+        const roomCode = String(data.roomCode || 'ONLINE').trim().toUpperCase();
+        const isHost = !!data.isHost;
 
-        playerWorm = new ServerWorm(playerId, playerName, skinId, hatId, false);
-        game.players.set(ws, playerWorm);
+        currentRoom = getOrCreateRoom(roomCode);
+        playerWorm = new ServerWorm(playerId, playerName, skinId, hatId, isHost);
+        currentRoom.players.set(ws, playerWorm);
 
-        // İstemciye başlangıç paketini gönder
         const activeSpawns = {
           [playerId]: { x: playerWorm.x, y: playerWorm.y, angle: playerWorm.angle }
         };
 
-        const currentPlayersList = Array.from(game.players.values()).map(p => ({
-          id: p.id,
-          name: p.name,
-          skinId: p.skinId,
-          hatId: p.hatId
-        }));
-
         ws.send(JSON.stringify({
-          type: 'HELLO_ACK'
+          type: 'HELLO_ACK',
+          playerId: playerId,
+          roomCode: roomCode
         }));
 
-        ws.send(JSON.stringify({
-          type: 'GAME_START',
-          roomCode: 'ONLINE',
-          worldWidth: WORLD_WIDTH,
-          worldHeight: WORLD_HEIGHT,
-          foods: game.foods.map(f => ({ x: f.x, y: f.y, type: f.type })),
-          spawns: activeSpawns,
-          players: currentPlayersList
-        }));
+        // Eğer genel arena ise direkt oyuna başlat
+        if (roomCode === 'ONLINE' || currentRoom.state === 'PLAYING') {
+          ws.send(JSON.stringify({
+            type: 'GAME_START',
+            roomCode: roomCode,
+            worldWidth: WORLD_WIDTH,
+            worldHeight: WORLD_HEIGHT,
+            foods: currentRoom.foods.map(f => ({ x: f.x, y: f.y, type: f.type })),
+            spawns: activeSpawns,
+            players: currentRoom.getLobbyList()
+          }));
+        } else {
+          // Özel oda lobisindeyse lobi listesini güncelle
+          currentRoom.broadcast({
+            type: 'LOBBY_STATE',
+            roomCode: roomCode,
+            players: currentRoom.getLobbyList()
+          });
+        }
 
-        console.log(`[>] ${playerName} (${playerId}) arenaya girdi! Toplam oyuncu: ${game.players.size}`);
+        console.log(`[>] ${playerName} (${playerId}) [Oda: ${roomCode}] katıldı. Odadaki kişi: ${currentRoom.players.size}`);
+      } else if (data.type === 'START_ROOM_GAME') {
+        // Oda sahibi odayı başlattı!
+        if (currentRoom) {
+          currentRoom.state = 'PLAYING';
+          const spawns = {};
+          const count = currentRoom.players.size;
+          let idx = 0;
+          for (const p of currentRoom.players.values()) {
+            const angle = (idx / count) * Math.PI * 2;
+            spawns[p.id] = {
+              x: Math.round(WORLD_WIDTH / 2 + Math.cos(angle) * 750),
+              y: Math.round(WORLD_HEIGHT / 2 + Math.sin(angle) * 750),
+              angle: Number((angle + Math.PI / 2).toFixed(2))
+            };
+            p.x = spawns[p.id].x;
+            p.y = spawns[p.id].y;
+            p.angle = spawns[p.id].angle;
+            idx++;
+          }
+
+          currentRoom.broadcast({
+            type: 'GAME_START',
+            roomCode: currentRoom.roomCode,
+            worldWidth: WORLD_WIDTH,
+            worldHeight: WORLD_HEIGHT,
+            foods: currentRoom.foods.map(f => ({ x: f.x, y: f.y, type: f.type })),
+            spawns: spawns,
+            players: currentRoom.getLobbyList()
+          });
+          console.log(`[🚀] Oda oyunu başlatıldı: ${currentRoom.roomCode}`);
+        }
       } else if (data.type === 'PLAYER_INPUT') {
         if (playerWorm && !playerWorm.isDead) {
+          // İstemci koordinatlarını eşitle (Hassas çarpışma için)
+          if (typeof data.x === 'number' && typeof data.y === 'number') {
+            playerWorm.x = data.x;
+            playerWorm.y = data.y;
+          }
+          if (typeof data.angle === 'number') {
+            playerWorm.angle = data.angle;
+          }
           if (typeof data.targetAngle === 'number') {
             playerWorm.targetAngle = data.targetAngle;
           }
           playerWorm.isBoosting = !!data.isBoosting;
         }
+      } else if (data.type === 'CLIENT_DIED') {
+        // İstemci yerel çarpışma ile öldüğünü bildirdi
+        if (playerWorm && !playerWorm.isDead && currentRoom) {
+          playerWorm.isDead = true;
+          playerWorm.killedBy = data.killedBy || 'Başka bir solucan';
+          currentRoom.dropFoodFromWorm(playerWorm);
+        }
+      } else if (data.type === 'CLIENT_ATE_FOOD') {
+        // İstemci yem yediğini bildirdi
+        if (playerWorm && !playerWorm.isDead && currentRoom && data.eaten && Array.isArray(data.eaten)) {
+          data.eaten.forEach(ef => {
+            playerWorm.score += (ef.points || 3);
+            const foundIdx = currentRoom.foods.findIndex(f => Math.hypot(f.x - ef.x, f.y - ef.y) < 55);
+            if (foundIdx !== -1) {
+              currentRoom.foods.splice(foundIdx, 1);
+              currentRoom.pendingEatenFoods.push(ef);
+            }
+          });
+        }
       } else if (data.type === 'PLAYER_RESPAWN') {
-        if (playerWorm) {
-          playerWorm.x = Math.round(WORLD_WIDTH / 2 + (Math.random() - 0.5) * 2000);
-          playerWorm.y = Math.round(WORLD_HEIGHT / 2 + (Math.random() - 0.5) * 2000);
+        if (playerWorm && currentRoom) {
+          playerWorm.x = Math.round(WORLD_WIDTH / 2 + (Math.random() - 0.5) * 1600);
+          playerWorm.y = Math.round(WORLD_HEIGHT / 2 + (Math.random() - 0.5) * 1600);
           playerWorm.angle = Math.random() * Math.PI * 2;
           playerWorm.targetAngle = playerWorm.angle;
           playerWorm.score = 15;
@@ -594,11 +610,31 @@ wss.on('connection', (ws) => {
   });
 
   ws.on('close', () => {
-    if (playerWorm) {
-      console.log(`[-] Oyuncu ayrıldı: ${playerWorm.name} (${playerId})`);
-      game.dropFoodFromWorm(playerWorm);
+    if (currentRoom && playerWorm) {
+      console.log(`[-] Oyuncu ayrıldı: ${playerWorm.name} (${playerId}) [Oda: ${currentRoom.roomCode}]`);
+      currentRoom.dropFoodFromWorm(playerWorm);
+      currentRoom.players.delete(ws);
+
+      // Lobideyken oyuncu ayrıldıysa lobi listesini güncelle
+      if (currentRoom.state === 'LOBBY') {
+        currentRoom.broadcast({
+          type: 'LOBBY_STATE',
+          roomCode: currentRoom.roomCode,
+          players: currentRoom.getLobbyList()
+        });
+      }
+
+      // Boşalan özel odaları temizle
+      if (currentRoom.players.size === 0 && currentRoom.roomCode !== 'ONLINE') {
+        setTimeout(() => {
+          if (currentRoom.players.size === 0) {
+            currentRoom.destroy();
+            rooms.delete(currentRoom.roomCode);
+            console.log(`[x] Boş oda kapatıldı: ${currentRoom.roomCode}`);
+          }
+        }, 30000);
+      }
     }
-    game.players.delete(ws);
   });
 
   ws.on('error', (err) => {
@@ -611,7 +647,7 @@ server.listen(PORT, () => {
   console.log(`====================================================`);
   console.log(`🐛 WORM ARENA 7/24 OYUN SUNUCUSU BAŞLATILDI!`);
   console.log(`🌐 HTTP & WebSocket Portu: ${PORT}`);
-  console.log(`🎮 Yerel Test: http://localhost:${PORT}`);
-  console.log(`⚡ WebSocket Adresi: ws://localhost:${PORT}`);
+  console.log(`👥 Çok Oyunculu Oda & Canlı Arena Desteği: Aktif`);
+  console.log(`🤖 Arenada Bot Sayısı: ${BOT_COUNT} (Sadece Gerçek Oyuncular)`);
   console.log(`====================================================`);
 });

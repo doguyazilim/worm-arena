@@ -2520,13 +2520,16 @@ class WormArenaGame {
         } catch (e) {}
       }
 
-      // Arena duvarına çarpma kontrolü
+      // Solucan Çarpışmaları (Kafa ve Gövde - Anında ezilme ve yem patlaması)
+      this.checkWormCollisions(allWorms);
+
+      // Arena duvarına veya diğer yılanlara çarpma kontrolü
       if (this.player.isDead) {
-        const wallName = window.I18N ? window.I18N.t('arena_wall') : 'Arena Wall';
-        this.handlePlayerDeath(wallName);
-        if (this.network.isMultiplayer && !this.network.isHost && this.network.hostConn) {
+        const killerName = this.player.killedBy || (window.I18N ? window.I18N.t('arena_wall') : 'Arena Wall');
+        this.handlePlayerDeath(killerName);
+        if (this.network.isMultiplayer && this.network.hostConn) {
           try {
-            this.network.hostConn.send({ type: 'CLIENT_DIED', killedBy: wallName });
+            this.network.hostConn.send({ type: 'CLIENT_DIED', killedBy: killerName });
           } catch (e) {}
         }
         return;
@@ -5477,22 +5480,25 @@ class WormArenaGame {
     const respawnBtn = document.getElementById('respawnBtn');
     if (respawnBtn) {
       respawnBtn.addEventListener('click', () => {
-        if (this.network.isMultiplayer && !this.network.isHost) {
-          this.network.requestRespawn();
-          const alertMsg = window.I18N ? window.I18N.t('alert_respawn_requested_msg') : 'Respawn request sent...';
-          const alertTitle = window.I18N ? window.I18N.t('alert_respawn_requested_title') : '🔄 RESPAWN';
-          window.showInGameAlert(alertMsg, 'info', alertTitle);
-        } else if (this.network.isMultiplayer && this.network.isHost) {
-          const skin = SKINS[this.selectedSkinIndex] || SKINS[0];
-          const rx = Math.round(this.worldWidth / 2 + (Math.random() - 0.5) * 600);
-          const ry = Math.round(this.worldHeight / 2 + (Math.random() - 0.5) * 600);
-          this.player = new Worm(rx, ry, this.getPlayerName(), skin, false);
-          this.player.peerId = 'host';
-          this.player.ghostTimer = 0;
-          this.player.hat = this.equippedHat;
-          this.gameOverScreen.classList.add('hidden');
-          if (this.joystickZone) this.joystickZone.classList.remove('hidden');
-          this.state = 'PLAYING';
+        if (this.network && this.network.isMultiplayer) {
+          if (this.network.isServerMode || !this.network.isHost) {
+            this.network.requestRespawn();
+            const alertMsg = window.I18N ? window.I18N.t('alert_respawn_requested_msg') : 'Respawn request sent...';
+            const alertTitle = window.I18N ? window.I18N.t('alert_respawn_requested_title') : '🔄 RESPAWN';
+            window.showInGameAlert(alertMsg, 'info', alertTitle);
+          } else {
+            const skin = SKINS[this.selectedSkinIndex] || SKINS[0];
+            const rx = Math.round(this.worldWidth / 2 + (Math.random() - 0.5) * 600);
+            const ry = Math.round(this.worldHeight / 2 + (Math.random() - 0.5) * 600);
+            this.player = new Worm(rx, ry, this.getPlayerName(), skin, false);
+            this.player.peerId = 'host';
+            this.player.ghostTimer = 60;
+            this.player.hat = this.equippedHat;
+            this.gameOverScreen.classList.add('hidden');
+            this.gameOverScreen.style.display = 'none';
+            if (this.joystickZone) this.joystickZone.classList.remove('hidden');
+            this.state = 'PLAYING';
+          }
         } else {
           this.startGame(true);
         }
