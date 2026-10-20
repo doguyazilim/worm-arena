@@ -507,6 +507,13 @@ wss.on('connection', (ws) => {
     try {
       const data = JSON.parse(message);
 
+      if (data.type === 'PING') {
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ type: 'PONG' }));
+        }
+        return;
+      }
+
       if (data.type === 'PLAYER_HELLO') {
         const playerName = (data.name || 'Oyuncu').substring(0, 14);
         const skinId = data.skinId || 'white_king';

@@ -716,7 +716,25 @@ class NetworkManager {
 
       this.ws = ws;
 
+      let wakeNotice1 = setTimeout(() => {
+        if (ws && ws.readyState !== WebSocket.OPEN) {
+          if (window.showInGameAlert) {
+            window.showInGameAlert('🚀 Sunucu uyanıyor, lütfen bekleyin (Bulut sunucusu açılıyor)...', 'info', '⏳ SUNUCU BAŞLATILIYOR');
+          }
+        }
+      }, 5500);
+
+      let wakeNotice2 = setTimeout(() => {
+        if (ws && ws.readyState !== WebSocket.OPEN) {
+          if (window.showInGameAlert) {
+            window.showInGameAlert('⚡ Sunucuya bağlanılıyor, lütfen sayfadan ayrılmayın...', 'info', '⏳ SUNUCU BAŞLATILIYOR');
+          }
+        }
+      }, 16000);
+
       const connTimeout = setTimeout(() => {
+        clearTimeout(wakeNotice1);
+        clearTimeout(wakeNotice2);
         if (ws.readyState !== WebSocket.OPEN) {
           try { ws.close(); } catch (e) {}
           const errorMsg = window.I18N ? window.I18N.t('server_timeout_msg') : 'Oyun sunucusuna bağlanılamadı. Sunucunun açık olduğundan emin olun.';
@@ -725,7 +743,7 @@ class NetworkManager {
           }
           reject(new Error('Server connection timeout'));
         }
-      }, 7500);
+      }, 45000); // 45 saniye zaman aşımı (Render uyku modundan uyanırken zaman tanır)
 
       // WebRTC kanalı gibi davranan uyumlu adaptör
       this.hostConn = {
@@ -744,7 +762,20 @@ class NetworkManager {
 
       ws.onopen = () => {
         clearTimeout(connTimeout);
+        clearTimeout(wakeNotice1);
+        clearTimeout(wakeNotice2);
         console.log('Oyun sunucusuna başarıyla bağlanıldı!');
+
+        // 15 saniyede bir ping göndererek bağlantıyı ve bulut tünelini sürekli canlı tut
+        if (this.serverPingInterval) clearInterval(this.serverPingInterval);
+        this.serverPingInterval = setInterval(() => {
+          if (ws && ws.readyState === WebSocket.OPEN) {
+            try {
+              ws.send(JSON.stringify({ type: 'PING' }));
+            } catch (e) {}
+          }
+        }, 15000);
+
         const defaultPlayerName = window.I18N ? window.I18N.t('player_default') : 'Player';
         const playerName = (this.game && this.game.getPlayerName) ? this.game.getPlayerName() : defaultPlayerName;
         const skinId = (this.game && this.game.getSelectedSkinId) ? this.game.getSelectedSkinId() : 'white_king';
@@ -772,6 +803,13 @@ class NetworkManager {
       };
 
       ws.onclose = () => {
+        clearTimeout(connTimeout);
+        clearTimeout(wakeNotice1);
+        clearTimeout(wakeNotice2);
+        if (this.serverPingInterval) {
+          clearInterval(this.serverPingInterval);
+          this.serverPingInterval = null;
+        }
         console.warn('Oyun sunucusu bağlantısı kapandı.');
         if (this.game && this.game.state === 'PLAYING') {
           if (window.showInGameAlert) {
@@ -816,11 +854,16 @@ class NetworkManager {
       if (typeof data.isHost === 'boolean') this.isHost = data.isHost;
       if (typeof data.isArena === 'boolean') this.isArena = data.isArena;
 
-      if (this.isHost && this.onRoomReady) {
-        this.onRoomReady(this.roomCode);
-      }
-      if (this.onLobbyUpdated) {
-        this.onLobbyUpdated([{ id: this.myPeerId, name: this.game.getPlayerName(), isHost: this.isHost }], this.roomCode);
+      const isPublicArena = this.isArena || this.roomCode === 'ONLINE' || (typeof this.roomCode === 'string' && this.roomCode.startsWith('ARENA_'));
+
+      // Canlı Arenadaysak asla 'Arkadaşlarla Oyna / Bekleme Odası' modalını açma!
+      if (!isPublicArena) {
+        if (this.isHost && this.onRoomReady) {
+          this.onRoomReady(this.roomCode);
+        }
+        if (this.onLobbyUpdated) {
+          this.onLobbyUpdated([{ id: this.myPeerId, name: this.game.getPlayerName(), isHost: this.isHost }], this.roomCode);
+        }
       }
 
       if (this.clientHelloInterval) {
@@ -837,6 +880,9 @@ class NetworkManager {
         waitingStatusText.textContent = window.I18N ? window.I18N.t('mp_waiting_status_text') : "Host hasn't started the game yet. Please wait...";
       }
     } else if (data.type === 'LOBBY_STATE') {
+      const isPublicArena = this.isArena || this.roomCode === 'ONLINE' || (typeof this.roomCode === 'string' && this.roomCode.startsWith('ARENA_'));
+      if (isPublicArena) return; // Canlı arenada lobi modalı asla tetiklenmez!
+
       if (data.players && Array.isArray(data.players)) {
         this.hostLobbyPlayers = data.players;
       }
@@ -1293,6 +1339,10 @@ class NetworkManager {
         this.peer.destroy();
       } catch (e) {}
       this.peer = null;
+    }
+    if (this.serverPingInterval) {
+      clearInterval(this.serverPingInterval);
+      this.serverPingInterval = null;
     }
     if (this.ws) {
       try { this.ws.close(); } catch (e) {}

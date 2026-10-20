@@ -2137,6 +2137,13 @@ class WormArenaGame {
     if (!playerName) return;
     if (!this.validateSelectedSkin()) return;
 
+    // Bekleme odası / arkadaşlarla oyna modalını kesinlikle gizle
+    const multiplayerModal = document.getElementById('multiplayerModal');
+    if (multiplayerModal) {
+      multiplayerModal.classList.add('hidden');
+      multiplayerModal.style.display = 'none';
+    }
+
     sounds.init();
     sounds.playClick();
     if (window.showInGameAlert) {
@@ -4630,6 +4637,17 @@ class WormArenaGame {
 
     // UI Lobi Listesini Render Etme Fonksiyonu
     const renderLobbyPlayers = (players, roomCode) => {
+      const code = String(roomCode || (this.network && this.network.roomCode) || '');
+      const isPublicArena = code === 'ONLINE' || code.startsWith('ARENA_') || (this.network && this.network.isArena);
+      if (isPublicArena) {
+        // Canlı Arena için asla bekleme odası veya arkadaşlarla oyna modalını açma!
+        if (multiplayerModal) {
+          multiplayerModal.classList.add('hidden');
+          multiplayerModal.style.display = 'none';
+        }
+        return;
+      }
+
       // YALNIZCA bir başkasının odasına bağlanmış bir misafir (client) ise bekleme odasını göster
       if (!this.network.isHost && this.network.hostConn) {
         // İSTEMCİ (CLIENT) GÖRÜNÜMÜ: Odaya katılan arkadaş bekleme odasında lobiyi izler
