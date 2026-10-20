@@ -447,6 +447,7 @@ class RoomInstance {
 
 // Tüm aktif odalar haritası
 const rooms = new Map(); // roomCode -> RoomInstance
+const MAX_PLAYERS_PER_ROOM = 25; // Canlı arenada her oda en fazla 20-25 kişilik
 
 function getOrCreateRoom(roomCode = 'ONLINE') {
   const code = String(roomCode || 'ONLINE').trim().toUpperCase();
@@ -457,6 +458,39 @@ function getOrCreateRoom(roomCode = 'ONLINE') {
     console.log(`[+] Yeni oda oluşturuldu: ${code}`);
   }
   return room;
+}
+
+// Canlı Arena için 20-25 kişilik dinamik oda havuzu ve rastgele eşleştirme
+function findOrSpawnArenaRoom() {
+  // 1. Kapasitesi 25'ten az olan mevcut açık canlı arena odalarını bul
+  const availableArenas = [];
+  for (const room of rooms.values()) {
+    if (room.roomCode.startsWith('ARENA_') && room.players.size < MAX_PLAYERS_PER_ROOM) {
+      availableArenas.push(room);
+    }
+  }
+
+  // 2. Eğer yer olan açık oda varsa, kullanıcıyı rastgele birine ata (20-25 kişilik odalar)
+  if (availableArenas.length > 0) {
+    const chosenRoom = availableArenas[Math.floor(Math.random() * availableArenas.length)];
+    return chosenRoom;
+  }
+
+  // 3. Eğer mevcut tüm odalar 25 kişiyle dolmuşsa veya henüz hiç arena yoksa, yeni bir arena odası aç!
+  let arenaNum = 1;
+  while (rooms.has(`ARENA_${arenaNum}`)) {
+    const r = rooms.get(`ARENA_${arenaNum}`);
+    if (r.players.size < MAX_PLAYERS_PER_ROOM) {
+      return r;
+    }
+    arenaNum++;
+  }
+
+  const newCode = `ARENA_${arenaNum}`;
+  const newRoom = getOrCreateRoom(newCode);
+  newRoom.state = 'PLAYING';
+  console.log(`[🌐] Yeni 25 Kişilik Canlı Arena Odası Başlatıldı: ${newCode}`);
+  return newRoom;
 }
 
 // ==================== WEBSOCKET BAĞLANTI YÖNETİMİ ====================
@@ -477,10 +511,19 @@ wss.on('connection', (ws) => {
         const playerName = (data.name || 'Oyuncu').substring(0, 14);
         const skinId = data.skinId || 'white_king';
         const hatId = data.hatId || 'none';
-        const roomCode = String(data.roomCode || 'ONLINE').trim().toUpperCase();
+        const rawCode = String(data.roomCode || 'ONLINE').trim().toUpperCase();
+        const isPublicArena = rawCode === 'ONLINE' || rawCode.startsWith('ARENA_');
 
-        currentRoom = getOrCreateRoom(roomCode);
-        const isHost = (roomCode !== 'ONLINE' && currentRoom.players.size === 0) ? true : !!data.isHost;
+        if (isPublicArena) {
+          // Canlı arenaya giren kullanıcıyı 20-25 kişilik rastgele müsait bir odaya yönlendir
+          currentRoom = findOrSpawnArenaRoom();
+        } else {
+          // Özel arkadaş odası (örn. 7842)
+          currentRoom = getOrCreateRoom(rawCode);
+        }
+
+        const roomCode = currentRoom.roomCode;
+        const isHost = (!isPublicArena && currentRoom.players.size === 0) ? true : !!data.isHost;
         playerWorm = new ServerWorm(playerId, playerName, skinId, hatId, isHost);
         currentRoom.players.set(ws, playerWorm);
 
@@ -492,11 +535,12 @@ wss.on('connection', (ws) => {
           type: 'HELLO_ACK',
           playerId: playerId,
           roomCode: roomCode,
-          isHost: isHost
+          isHost: isHost,
+          isArena: isPublicArena
         }));
 
         // Eğer genel arena ise direkt oyuna başlat:
-        if (roomCode === 'ONLINE') {
+        if (isPublicArena) {
           ws.send(JSON.stringify({
             type: 'GAME_START',
             roomCode: roomCode,
@@ -527,7 +571,7 @@ wss.on('connection', (ws) => {
           });
         }
 
-        console.log(`[>] ${playerName} (${playerId}) [Oda: ${roomCode}] katıldı. (Host: ${isHost}, Durum: ${currentRoom.state}). Odadaki kişi: ${currentRoom.players.size}`);
+        console.log(`[>] ${playerName} (${playerId}) [Oda: ${roomCode}] katıldı. (Arena: ${isPublicArena}, Kişi: ${currentRoom.players.size}/${isPublicArena ? MAX_PLAYERS_PER_ROOM : 'Sınırsız'})`);
       } else if (data.type === 'START_ROOM_GAME') {
         // Sadece oda sahibi odayı başlatabilir!
         if (currentRoom && playerWorm && playerWorm.isHost) {

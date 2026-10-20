@@ -813,6 +813,8 @@ class NetworkManager {
       this.hasReceivedHelloAck = true;
       if (data.playerId) this.myPeerId = data.playerId;
       if (data.roomCode) this.roomCode = data.roomCode;
+      if (typeof data.isHost === 'boolean') this.isHost = data.isHost;
+      if (typeof data.isArena === 'boolean') this.isArena = data.isArena;
 
       if (this.isHost && this.onRoomReady) {
         this.onRoomReady(this.roomCode);
@@ -854,6 +856,12 @@ class NetworkManager {
       }
 
       console.log('GAME_START paketi alındı! Arenaya giriliyor...');
+      if (data.roomCode) {
+        this.roomCode = data.roomCode;
+        if (this.game && this.game.hudRoomCode) {
+          this.game.hudRoomCode.textContent = data.roomCode;
+        }
+      }
       this.game.worldWidth = data.worldWidth || 6400;
       this.game.worldHeight = data.worldHeight || 6400;
 
@@ -965,10 +973,11 @@ class NetworkManager {
       this.game.state = 'PLAYING';
     } else if (data.type === 'GAME_TICK') {
       // Host'tan gelen anlık fizik karesi
-      // SADECE VE SADECE GENEL CANLI ARENA İÇİN (ONLINE):
+      // SADECE VE SADECE GENEL CANLI ARENA İÇİN (ONLINE veya ARENA_):
       // Özel odalarda (arkadaşlarla oda) oyun SADECE oda sahibinin başlattığı 'GAME_START' paketiyle başlar!
       // (Ölüm veya Game Over anında ASLA tekrar başlatma yapma, böylece ekran kilitlenmez)
-      if (this.roomCode === 'ONLINE' && (this.game.state === 'START' || this.game.state === 'MENU' || this.game.state === 'WAITING' || this.game.state === 'LOBBY')) {
+      const isPublicArena = this.roomCode === 'ONLINE' || (typeof this.roomCode === 'string' && this.roomCode.startsWith('ARENA_')) || this.isArena;
+      if (isPublicArena && (this.game.state === 'START' || this.game.state === 'MENU' || this.game.state === 'WAITING' || this.game.state === 'LOBBY')) {
         console.log('GAME_TICK alındı, genel canlı arenaya başlanıyor!');
         if (this.clientHelloInterval) {
           clearInterval(this.clientHelloInterval);
