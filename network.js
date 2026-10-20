@@ -773,13 +773,18 @@ class NetworkManager {
 
       let serverUrl = customUrl || localStorage.getItem('worm_server_url');
       if (!serverUrl) {
-        if (typeof window !== 'undefined' && window.location && window.location.hostname && window.location.hostname !== '' && window.location.protocol.startsWith('http')) {
-          const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        if (typeof window !== 'undefined' && window.location && window.location.hostname) {
           const host = window.location.hostname;
-          const port = window.location.port ? `:${window.location.port}` : '';
-          serverUrl = `${proto}//${host}${port}`;
+          if (host === 'localhost' || host === '127.0.0.1') {
+            const port = window.location.port ? `:${window.location.port}` : ':3000';
+            serverUrl = `ws://${host}${port}`;
+          } else if (window.location.protocol.startsWith('http') && host.includes('onrender.com')) {
+            serverUrl = `wss://${host}`;
+          } else {
+            serverUrl = 'wss://worm-arena-6jh7.onrender.com';
+          }
         } else {
-          serverUrl = 'ws://localhost:3000';
+          serverUrl = 'wss://worm-arena-6jh7.onrender.com';
         }
       }
 
