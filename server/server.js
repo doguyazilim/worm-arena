@@ -78,7 +78,7 @@ const server = http.createServer((req, res) => {
 // ==================== SABİTLER ====================
 const WORLD_WIDTH = 6400;
 const WORLD_HEIGHT = 6400;
-const TARGET_FOOD_COUNT = 1400;
+const TARGET_FOOD_COUNT = 550; // Aşırı yem yükünü ve ağ paket boyutunu %60 azaltır (Kasma ve gecikmeyi önler)
 // KULLANICI İSTEĞİ: Arenada bot olmayacak! Sadece gerçek oyuncular olacak!
 const BOT_COUNT = 0;
 
@@ -240,7 +240,7 @@ class RoomInstance {
     this.foods = [];
     this.pendingNewFoods = [];
     this.pendingEatenFoods = [];
-    this.state = roomCode === 'ONLINE' ? 'PLAYING' : 'LOBBY'; // ONLINE direkt başlar, özel odalar ise LOBBY bekler
+    this.state = (roomCode === 'ONLINE' || String(roomCode).startsWith('ARENA_')) ? 'PLAYING' : 'LOBBY';
 
     this.initFoods();
 
@@ -295,13 +295,15 @@ class RoomInstance {
 
   dropFoodFromWorm(worm) {
     if (!worm || !worm.body) return;
-    const count = Math.min(45, Math.max(8, Math.floor(worm.body.length / 2)));
+    const bodyLen = (worm.body && Array.isArray(worm.body)) ? worm.body.length : 0;
+    // Kullanıcı İsteği: Büyük yılanlar ölünce haritada aşırı derecede yem bırakmasın
+    const count = Math.min(10, Math.max(4, Math.floor(bodyLen * 0.20)));
     for (let i = 0; i < count; i++) {
-      const idx = Math.floor((i / count) * worm.body.length);
+      const idx = bodyLen > 0 ? Math.floor((i / count) * bodyLen) : 0;
       const seg = worm.body[idx] || worm;
       const rx = Math.round(seg.x + (Math.random() - 0.5) * (worm.radius * 2.2));
       const ry = Math.round(seg.y + (Math.random() - 0.5) * (worm.radius * 2.2));
-      const foodType = i % 3 === 0 ? 'star_coin' : (i % 2 === 0 ? 'donut' : 'apple');
+      const foodType = i % 2 === 0 ? 'energy_star' : 'star_coin';
       this.spawnFood(rx, ry, foodType);
     }
   }
@@ -386,7 +388,7 @@ class RoomInstance {
   tick() {
     if (this.players.size === 0) return;
     // Özel oda lobisindeyken (Host henüz başlatmamışken) oyun döngüsü ve GAME_TICK kesinlikle durdurulur!
-    if (this.roomCode !== 'ONLINE' && this.state !== 'PLAYING') return;
+    if (!this.roomCode.startsWith('ARENA_') && this.roomCode !== 'ONLINE' && this.state !== 'PLAYING') return;
 
     // 1. Oyuncuları ilerlet
     for (const worm of this.players.values()) {
@@ -461,7 +463,18 @@ function getOrCreateRoom(roomCode = 'ONLINE') {
 }
 
 // Canlı Arena için 20-25 kişilik dinamik oda havuzu ve rastgele eşleştirme
+const DEFAULT_ARENA_COUNT = 4; // Kalıcı 4 canlı arena kanalı (ARENA_1, ARENA_2, ARENA_3, ARENA_4)
+
 function findOrSpawnArenaRoom() {
+  // En az 4 arena kanalı başlangıçtan itibaren havuzda hazır bulunsun
+  for (let i = 1; i <= DEFAULT_ARENA_COUNT; i++) {
+    const code = `ARENA_${i}`;
+    if (!rooms.has(code)) {
+      const r = getOrCreateRoom(code);
+      r.state = 'PLAYING';
+    }
+  }
+
   // 1. Kapasitesi 25'ten az olan mevcut açık canlı arena odalarını bul
   const availableArenas = [];
   for (const room of rooms.values()) {
@@ -470,14 +483,14 @@ function findOrSpawnArenaRoom() {
     }
   }
 
-  // 2. Eğer yer olan açık oda varsa, kullanıcıyı rastgele birine ata (20-25 kişilik odalar)
+  // 2. Kullanıcı isteği: Canlı arenada herkesi rastgele müsait bir arena odasına ata!
   if (availableArenas.length > 0) {
     const chosenRoom = availableArenas[Math.floor(Math.random() * availableArenas.length)];
     return chosenRoom;
   }
 
-  // 3. Eğer mevcut tüm odalar 25 kişiyle dolmuşsa veya henüz hiç arena yoksa, yeni bir arena odası aç!
-  let arenaNum = 1;
+  // 3. Eğer mevcut tüm odalar 25 kişiyle dolmuşsa, yeni bir arena odası aç!
+  let arenaNum = DEFAULT_ARENA_COUNT + 1;
   while (rooms.has(`ARENA_${arenaNum}`)) {
     const r = rooms.get(`ARENA_${arenaNum}`);
     if (r.players.size < MAX_PLAYERS_PER_ROOM) {
@@ -530,7 +543,7 @@ wss.on('connection', (ws) => {
         }
 
         const roomCode = currentRoom.roomCode;
-        const isHost = (!isPublicArena && currentRoom.players.size === 0) ? true : !!data.isHost;
+        const isHost = isPublicArena ? false : (currentRoom.players.size === 0 ? true : !!data.isHost);
         playerWorm = new ServerWorm(playerId, playerName, skinId, hatId, isHost);
         currentRoom.players.set(ws, playerWorm);
 
@@ -689,13 +702,13 @@ wss.on('connection', (ws) => {
         });
       }
 
-      // Boşalan özel odaları temizle
-      if (currentRoom.players.size === 0 && currentRoom.roomCode !== 'ONLINE') {
+      // Boşalan özel odaları temizle (ARENA_ odaları kalıcı havuzdur, silinmez!)
+      if (currentRoom.players.size === 0 && !currentRoom.roomCode.startsWith('ARENA_') && currentRoom.roomCode !== 'ONLINE') {
         setTimeout(() => {
-          if (currentRoom.players.size === 0) {
+          if (currentRoom.players.size === 0 && !currentRoom.roomCode.startsWith('ARENA_')) {
             currentRoom.destroy();
             rooms.delete(currentRoom.roomCode);
-            console.log(`[x] Boş oda kapatıldı: ${currentRoom.roomCode}`);
+            console.log(`[x] Boş özel oda kapatıldı: ${currentRoom.roomCode}`);
           }
         }, 30000);
       }

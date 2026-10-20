@@ -2490,7 +2490,7 @@ class WormArenaGame {
 
     // ==================== CLIENT MODU ====================
     // İstemcide akıcı yerel kontrol (Çarpışma kararı sunucu/host tarafından verilir)
-    if (this.network.isMultiplayer && !this.network.isHost) {
+    if (this.network.isMultiplayer && (this.network.isServerMode || !this.network.isHost)) {
       this.network.sendThrottledInput(
         this.player.targetAngle,
         this.player.isBoosting,
@@ -2502,17 +2502,51 @@ class WormArenaGame {
       const allWorms = [this.player, ...this.network.remotePlayers.values()];
       this.player.update(this.worldWidth, this.worldHeight, this.foods, allWorms);
 
-      // İstemcide diğer oyuncuları ve botları kareler arası akıcı ilerlet (Dead-Reckoning & Smooth 60 FPS)
+      // İstemcide diğer oyuncuları ve botları kareler arası akıcı ilerlet (Dead-Reckoning & Smooth 60 FPS Kinematics)
       for (const rw of this.network.remotePlayers.values()) {
         if (!rw.isDead) {
+          // 1. Yumuşak yön (angle) yönelimi
           let diff = rw.targetAngle - rw.angle;
           while (diff < -Math.PI) diff += Math.PI * 2;
           while (diff > Math.PI) diff -= Math.PI * 2;
-          rw.angle += diff * 0.12;
+          rw.angle += diff * 0.18;
 
-          const spd = rw.isBoosting ? rw.boostSpeed : rw.baseSpeed;
-          rw.x += Math.cos(rw.angle) * spd * 0.75;
-          rw.y += Math.sin(rw.angle) * spd * 0.75;
+          // 2. Yumuşak konum lerp / akıcı ilerleme
+          if (typeof rw.serverX === 'number' && typeof rw.serverY === 'number') {
+            const dx = rw.serverX - rw.x;
+            const dy = rw.serverY - rw.y;
+            const distSq = dx * dx + dy * dy;
+            if (distSq > 360000) { // > 600px fark (ışınlanma / respawn)
+              rw.x = rw.serverX;
+              rw.y = rw.serverY;
+            } else {
+              rw.x += dx * 0.35;
+              rw.y += dy * 0.35;
+            }
+          } else {
+            const spd = rw.isBoosting ? rw.boostSpeed : rw.baseSpeed;
+            rw.x += Math.cos(rw.angle) * spd;
+            rw.y += Math.sin(rw.angle) * spd;
+          }
+
+          // 3. KUSURSUZ GÖVDE KİNEMATİĞİ (60 FPS Akıcı Kıvrılma - Segmentler kafayı pürüzsüz takip eder)
+          if (rw.body && rw.body.length > 0) {
+            let prevX = rw.x;
+            let prevY = rw.y;
+            const sp = rw.spacing || Math.max(6.5, rw.radius * 0.52);
+            for (let b = 0; b < rw.body.length; b++) {
+              const seg = rw.body[b];
+              const bdx = prevX - seg.x;
+              const bdy = prevY - seg.y;
+              const bdist = Math.hypot(bdx, bdy);
+              if (bdist > 0.001) {
+                seg.x = prevX - (bdx / bdist) * sp;
+                seg.y = prevY - (bdy / bdist) * sp;
+              }
+              prevX = seg.x;
+              prevY = seg.y;
+            }
+          }
         }
       }
 
@@ -2949,8 +2983,8 @@ class WormArenaGame {
   dropFoodFromWorm(worm) {
     if (!worm) return;
     const bodyLen = (worm.body && Array.isArray(worm.body)) ? worm.body.length : 0;
-    // Yılanın boyuna ve puanına göre orantılı yıldızlı yemek miktarı (Bol yem saçılması)
-    const count = Math.min(70, Math.max(16, Math.floor(bodyLen * 1.4)));
+    // Kullanıcı İsteği: Büyük yılanlar ölünce haritada aşırı derecede yem bırakmasın (Optimize yem sayısı)
+    const count = Math.min(10, Math.max(4, Math.floor(bodyLen * 0.20)));
 
     for (let i = 0; i < count; i++) {
       let posX = worm.x;
@@ -2960,39 +2994,35 @@ class WormArenaGame {
         const segIdx = Math.min(bodyLen - 1, Math.floor((i / count) * bodyLen));
         const seg = worm.body[segIdx];
         if (seg && typeof seg.x === 'number' && typeof seg.y === 'number') {
-          // Segment etrafına doğal organik saçılma (Geniş açı ve aralıklı)
           const angle = Math.random() * Math.PI * 2;
-          const dist = Math.random() * 32 + 12;
+          const dist = Math.random() * 26 + 10;
           posX = seg.x + Math.cos(angle) * dist;
           posY = seg.y + Math.sin(angle) * dist;
         } else {
           const angle = (i / count) * Math.PI * 2;
-          const dist = 35 + (i % 3) * 25 + Math.random() * 20;
+          const dist = 30 + (i % 3) * 20;
           posX = worm.x + Math.cos(angle) * dist;
           posY = worm.y + Math.sin(angle) * dist;
         }
       } else {
-        // Gövde henüz senkronize değilse tek noktaya yığılmasını önlemek için geniş halkalar halinde saç
-        const angle = (i / count) * Math.PI * 2 + (Math.random() - 0.5) * 0.4;
-        const dist = 40 + (i % 4) * 35 + Math.random() * 20;
+        const angle = (i / count) * Math.PI * 2;
+        const dist = 30 + (i % 3) * 20;
         posX = worm.x + Math.cos(angle) * dist;
         posY = worm.y + Math.sin(angle) * dist;
       }
 
       this.spawnFood(posX, posY, 'star_coin');
 
-      // Parlak altın rengi yıldız patlama kıvılcımları
-      for (let p = 0; p < 2; p++) {
-        this.particles.push({
-          x: posX,
-          y: posY,
-          vx: (Math.random() - 0.5) * 6,
-          vy: (Math.random() - 0.5) * 6,
-          color: Math.random() < 0.6 ? '#ffd700' : '#ffea00',
-          alpha: 1,
-          size: Math.random() * 3 + 2
-        });
-      }
+      // Parlak altın kıvılcım (Hafif ve performans dostu)
+      this.particles.push({
+        x: posX,
+        y: posY,
+        vx: (Math.random() - 0.5) * 4,
+        vy: (Math.random() - 0.5) * 4,
+        color: '#ffd700',
+        alpha: 1,
+        size: Math.random() * 2.5 + 2
+      });
     }
     sounds.playDie();
   }

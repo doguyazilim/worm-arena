@@ -1090,51 +1090,43 @@ class NetworkManager {
             worm.hat = wData.hatId || 'none';
             this.remotePlayers.set(wData.peerId, worm);
           }
+          worm.serverX = wData.x;
+          worm.serverY = wData.y;
           worm.targetAngle = wData.angle;
-          worm.angle = wData.angle;
           const rdx = wData.x - worm.x;
           const rdy = wData.y - worm.y;
           if (rdx * rdx + rdy * rdy > 250000) {
             worm.x = wData.x;
             worm.y = wData.y;
-          } else {
-            worm.x += rdx * 0.35;
-            worm.y += rdy * 0.35;
+            worm.angle = wData.angle;
           }
-          if (wData.body && wData.body.length > 0) {
-            // Seyreltilmiş (downsampled) ağ gövde noktalarını pürüzsüz ve kesintisiz yılan gövdesine dönüştür
-            const rawPts = wData.body;
-            if (rawPts.length === 1) {
-              worm.body = [{ x: rawPts[0].x, y: rawPts[0].y }];
-            } else {
-              const dense = [{ x: rawPts[0].x, y: rawPts[0].y }];
-              const targetSpacing = Math.max(6.5, (wData.radius || 11) * 0.52);
-              worm.spacing = targetSpacing;
-              for (let k = 1; k < rawPts.length; k++) {
-                const prev = dense[dense.length - 1];
-                const curr = rawPts[k];
-                const dx = curr.x - prev.x;
-                const dy = curr.y - prev.y;
-                const dist = Math.hypot(dx, dy);
-                if (dist > targetSpacing * 1.35) {
-                  const steps = Math.floor(dist / targetSpacing);
-                  for (let s = 1; s <= steps; s++) {
-                    const t = s / (steps + 1);
-                    dense.push({
-                      x: Math.round(prev.x + dx * t),
-                      y: Math.round(prev.y + dy * t)
-                    });
-                  }
-                }
-                dense.push({ x: curr.x, y: curr.y });
-              }
-              worm.body = dense;
-            }
-          }
-          worm.radius = wData.radius;
-          worm.score = wData.score;
+
+          worm.radius = wData.radius || 11;
+          worm.score = wData.score || 15;
           worm.kills = wData.kills || 0;
           worm.isBoosting = !!wData.isBoosting;
+          worm.hat = wData.hatId || worm.hat;
+
+          // Gövde segmentlerini GC yükü ve takılma yapmadan puana göre pürüzsüz boyutlandır
+          const targetLen = Math.max(8, 11 + Math.floor(worm.score / 15));
+          if (!worm.body || worm.body.length === 0) {
+            worm.body = [];
+            const sp = worm.spacing || 6.0;
+            for (let b = 0; b < targetLen; b++) {
+              worm.body.push({
+                x: worm.x - Math.cos(worm.angle) * (b * sp),
+                y: worm.y - Math.sin(worm.angle) * (b * sp)
+              });
+            }
+          } else {
+            while (worm.body.length < targetLen) {
+              const last = worm.body[worm.body.length - 1];
+              worm.body.push({ x: last.x, y: last.y });
+            }
+            while (worm.body.length > targetLen) {
+              worm.body.pop();
+            }
+          }
           const wasDead = worm.isDead;
           worm.isDead = !!wData.isDead;
           if (!wasDead && worm.isDead) {
@@ -1170,7 +1162,11 @@ class NetworkManager {
       }
       if (data.eatenFoods && data.eatenFoods.length > 0) {
         data.eatenFoods.forEach(ef => {
-          const idx = this.game.foods.findIndex(f => Math.hypot(f.x - ef.x, f.y - ef.y) < 65);
+          const idx = this.game.foods.findIndex(f => {
+            const dx = f.x - ef.x;
+            const dy = f.y - ef.y;
+            return (dx * dx + dy * dy) < 4225; // Math.hypot yerine hızlı karesel mesafe
+          });
           if (idx !== -1) {
             this.game.foods.splice(idx, 1);
           }
@@ -1267,7 +1263,7 @@ class NetworkManager {
   // ==================== 5. OYUNCU GİRDİSİ (CLIENT) ====================
   // Client: Host'a kendi yön, turbo ve anlık koordinat durumunu kısıtlamalı (throttled) gönderir
   sendThrottledInput(targetAngle, isBoosting, posX = null, posY = null, currentAngle = null) {
-    if (this.isHost || !this.isConnReady(this.hostConn)) return;
+    if (!this.isConnReady(this.hostConn) || (this.isHost && !this.isServerMode)) return;
 
     const now = performance.now();
     const angleDiff = Math.abs(targetAngle - this.lastSentAngle);
